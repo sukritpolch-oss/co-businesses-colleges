@@ -19,11 +19,11 @@ const apiKey = "";
 // API สำหรับฐานข้อมูลผู้ใช้งานหลัก
 const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxM8w9MX09g51WybbYzRu8DZH--D0SQ0G2nGz7OmF38HqHsKz_mX3EUK9OejI7JEUvU/exec";
 // API สำหรับคลังแผนฝึกส่วนกลาง (Cloud Hub) & ประเมินระบบ
-const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwMZBGSWinbV8P8KCsxQXGw-v6AiPnaHW2fawUyNUu3m7bCNF6in6S7pPmNJY4gZ2uWFg/exec"; 
+const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwMZBGSWinbV8P8KCsxQXGw-v6AiPnaHW2fawUyNUu3m7bCNF6in6S7pPmNJY4gZ2uWFg/exec";
 
 const ADMIN_EMAIL = "Sukritpol.ch@gmail.com";
 const ADMIN_PASSWORD = "@Sukritpol2528";
-const FILE_SECRET_KEY = "@Sukritpol2528"; 
+const FILE_SECRET_KEY = "@Sukritpol2528";
 
 const BEHAVIOR_OPTIONS = [
   'ความซื่อสัตย์', 'ระเบียบวินัยและตรงต่อเวลา', 'ความรับผิดชอบ', 'ใฝ่เรียนรู้',
@@ -31,13 +31,13 @@ const BEHAVIOR_OPTIONS = [
 ];
 
 const PROVINCES = [
-  "กรุงเทพมหานคร", "กระบี่", "กาญจนบุรี", "กาฬสินธุ์", "กำแพงเพชร", "ขอนแก่น", "จันทบุรี", "ฉะเชิงเทรา", "ชลบุรี", "ชัยนาท", 
-  "ชัยภูมิ", "ชุมพร", "เชียงราย", "เชียงใหม่", "ตรัง", "ตราด", "ตาก", "นครนายก", "นครปฐม", "นครพนม", "นครราชสีมา", 
-  "นครศรีธรรมราช", "นครสวรรค์", "นนทบุรี", "นราธิวาส", "น่าน", "บึงกาฬ", "บุรีรัมย์", "ปทุมธานี", "ประจวบคีรีขันธ์", 
-  "ปราจีนบุรี", "ปัตตานี", "พระนครศรีอยุธยา", "พะเยา", "พังงา", "พัทลุง", "พิจิตร", "พิษณุโลก", "เพชรบุรี", "เพชรบูรณ์", 
-  "แพร่", "ภูเก็ต", "มหาสารคาม", "มุกดาหาร", "แม่ฮ่องสอน", "ยโสธร", "ยะลา", "ร้อยเอ็ด", "ระนอง", "ระยอง", "ราชบุรี", 
-  "ลพบุรี", "ลำปาง", "ลำพูน", "เลย", "ศรีสะเกษ", "สกลนคร", "สงขลา", "สตูล", "สมุทรปราการ", "สมุทรสงคราม", 
-  "สมุทรสาคร", "สระแก้ว", "สระบุรี", "สิงห์บุรี", "สุโขทัย", "สุพรรณบุรี", "สุราษฎร์ธานี", "สุรินทร์", "หนองคาย", 
+  "กรุงเทพมหานคร", "กระบี่", "กาญจนบุรี", "กาฬสินธุ์", "กำแพงเพชร", "ขอนแก่น", "จันทบุรี", "ฉะเชิงเทรา", "ชลบุรี", "ชัยนาท",
+  "ชัยภูมิ", "ชุมพร", "เชียงราย", "เชียงใหม่", "ตรัง", "ตราด", "ตาก", "นครนายก", "นครปฐม", "นครพนม", "นครราชสีมา",
+  "นครศรีธรรมราช", "นครสวรรค์", "นนทบุรี", "นราธิวาส", "น่าน", "บึงกาฬ", "บุรีรัมย์", "ปทุมธานี", "ประจวบคีรีขันธ์",
+  "ปราจีนบุรี", "ปัตตานี", "พระนครศรีอยุธยา", "พะเยา", "พังงา", "พัทลุง", "พิจิตร", "พิษณุโลก", "เพชรบุรี", "เพชรบูรณ์",
+  "แพร่", "ภูเก็ต", "มหาสารคาม", "มุกดาหาร", "แม่ฮ่องสอน", "ยโสธร", "ยะลา", "ร้อยเอ็ด", "ระนอง", "ระยอง", "ราชบุรี",
+  "ลพบุรี", "ลำปาง", "ลำพูน", "เลย", "ศรีสะเกษ", "สกลนคร", "สงขลา", "สตูล", "สมุทรปราการ", "สมุทรสงคราม",
+  "สมุทรสาคร", "สระแก้ว", "สระบุรี", "สิงห์บุรี", "สุโขทัย", "สุพรรณบุรี", "สุราษฎร์ธานี", "สุรินทร์", "หนองคาย",
   "หนองบัวลำภู", "อ่างทอง", "อำนาจเจริญ", "อุดรธานี", "อุตรดิตถ์", "อุทัยธานี", "อุบลราชธานี"
 ];
 
@@ -92,7 +92,7 @@ const App = () => {
   const [cloudData, setCloudData] = useState([]);
   const [filterProvince, setFilterProvince] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
-  const [editingCloudId, setEditingCloudId] = useState(null); 
+  const [editingCloudId, setEditingCloudId] = useState(null);
   const [deleteModalItem, setDeleteModalItem] = useState(null);
   const [deleteReason, setDeleteReason] = useState('');
   const [isDeleting, setIsDeleting] = useState(false);
@@ -112,8 +112,8 @@ const App = () => {
 
   const [config, setConfig] = useState({
     aiProvider: 'gemini', userApiKey: '', openaiApiKey: '', claudeApiKey: '', deepseekApiKey: '',
-    collegeName: '', companyName: '', level: 'ปวช. และ ปวส.', fieldOfStudy: '', group: '', major: '', 
-    academicYear: '๒๕๖๙', startDate: '', endDate: '', hoursPerDay: 8, daysPerWeek: 5, weeks: 18, 
+    collegeName: '', companyName: '', level: 'ปวช. และ ปวส.', fieldOfStudy: '', group: '', major: '',
+    academicYear: '๒๕๖๙', startDate: '', endDate: '', hoursPerDay: 8, daysPerWeek: 5, weeks: 18,
     trainerName: '', trainerPosition: '', occupation: '', department: '', province: ''
   });
 
@@ -191,7 +191,7 @@ const App = () => {
     e.preventDefault();
     if (!authData.email || !authData.password || !authData.firstName || !authData.lastName) return setLoginError('กรุณากรอกข้อมูลสำคัญให้ครบถ้วน');
     if (authData.hasTrained === null || authData.hasTrained === undefined) return setLoginError('กรุณาตอบคำถามว่าท่านผ่านการอบรมแล้วหรือไม่');
-    
+
     const userExists = dbUsers.find(u => String(u.email || '').trim().toLowerCase() === String(authData.email).trim().toLowerCase());
     if (userExists) return setLoginError('อีเมลนี้ถูกลงทะเบียนแล้ว กรุณาเข้าสู่ระบบ');
 
@@ -239,10 +239,10 @@ const App = () => {
 
     if (!userByEmail) return setLoginError(`ไม่พบอีเมลนี้ในระบบ โปรดตรวจสอบให้ถูกต้อง`);
     if (String(userByEmail.password || '').trim() !== inputPassword) return setLoginError('รหัสผ่านไม่ถูกต้อง โปรดตรวจสอบตัวพิมพ์เล็ก-ใหญ่');
-    
+
     const userStatus = String(userByEmail.status || '').trim().toLowerCase();
     if (userStatus === 'hacker') return setLoginError(`บัญชีของท่านถูกระงับการใช้งาน โปรดติดต่อผู้ดูแลระบบ`);
-    
+
     const isApproved = userStatus === 'approved';
     if (!isApproved) return setLoginError(`บัญชีของคุณสถานะคือ "${userByEmail.status || 'รออนุมัติ'}" โปรดรอแอดมินอนุมัติ`);
 
@@ -252,13 +252,14 @@ const App = () => {
     setCurrentUserEmail(userByEmail.email);
     setCurrentUserRole(userByEmail.role || 'ครู');
 
-    // Sync basic config from user profile
+    // ดึงข้อมูลจากฐานข้อมูลมาใส่ใน Config ทันที
     setConfig(prev => ({
       ...prev,
-      collegeName: userByEmail.college || prev.collegeName,
-      companyName: userByEmail.companyName || prev.companyName,
-      province: userByEmail.province || prev.province,
-      trainerName: userByEmail.role === 'ครูฝึกในสถานประกอบการ' ? `${userByEmail.firstName} ${userByEmail.lastName}` : prev.trainerName
+      collegeName: userByEmail.college || '',
+      companyName: userByEmail.companyName || '',
+      province: userByEmail.province || '',
+      trainerName: `${userByEmail.firstName || ''} ${userByEmail.lastName || ''}`.trim(),
+      department: userByEmail.department || prev.department
     }));
 
     setShowWelcomeModal(true);
@@ -326,7 +327,7 @@ const App = () => {
       const handleViolation = () => {
         violationCountRef.current += 1;
         if (violationCountRef.current >= 2) {
-          fetch(GOOGLE_SCRIPT_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action: 'delete_user', email: currentUserEmail }) }).catch(()=>{});
+          fetch(GOOGLE_SCRIPT_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action: 'delete_user', email: currentUserEmail }) }).catch(() => { });
           resetAuthAndLogout(); return;
         }
         setShowSecurityAlert(true); setSecurityCountdown(3); setSecurityDevCode('');
@@ -402,7 +403,7 @@ const App = () => {
     let filenameParts = [];
     if (conf.occupation && conf.occupation.trim() !== '') filenameParts.push(conf.occupation.trim());
     else if (conf.companyName && conf.companyName.trim() !== '') filenameParts.push(conf.companyName.trim());
-    
+
     let baseName = `Workplace_${new Date().getTime()}`;
     if (filenameParts.length > 0) baseName = filenameParts.join('_').replace(/[/\\?%*:|"<>]/g, '-');
     return `ทวิภาคี_${baseName}.dvedata`;
@@ -454,7 +455,7 @@ const App = () => {
       }));
       setWorkplaceMainTasks(item.workplaceMainTasks || []);
       setSelectedBehaviors(item.selectedBehaviors || BEHAVIOR_OPTIONS);
-      
+
       if (isDeveloper) {
         setEditingCloudId(item.id);
         showStatus('เข้าสู่โหมดแก้ไขข้อมูลคลาวด์ (Admin)');
@@ -566,7 +567,7 @@ const App = () => {
       try {
         let rawText = event.target.result;
         rawText = rawText.replace(/^\uFEFF/, '').trim();
-        
+
         let parsed = null;
         const decodeUTF8 = (str) => {
           try { return decodeURIComponent(escape(atob(str))); }
@@ -625,8 +626,8 @@ const App = () => {
       const safeConfig = { ...config, userApiKey: '', openaiApiKey: '', claudeApiKey: '', deepseekApiKey: '' };
       const payload = {
         action: (isDeveloper && editingCloudId) ? 'adminUpdate' : 'shareData',
-        id: editingCloudId, 
-        config: safeConfig, 
+        id: editingCloudId,
+        config: safeConfig,
         workplaceMainTasks,
         selectedBehaviors,
         companyName: config.companyName,
@@ -971,13 +972,12 @@ const App = () => {
         }))
       );
 
-      const systemPrompt = `คุณคือระบบอัจฉริยะสำหรับจัดทำแผนฝึกอาชีพทวิภาคี หน้าที่ของคุณคือการอ่านงานสถานประกอบการ แล้วจับคู่ (Map) กับพูลงานในรายวิชา (Pool) ที่มีลักษณะคล้ายคลึงกัน
-      พูลงานในรายวิชา (Pool): ${JSON.stringify(pool.map(t => ({ id: t.id, name: t.name })))}
-      **กฎการจับคู่:**
-      1. พิจารณาจากลักษณะการกระทำและความหมายของงานสถานประกอบการ เทียบกับ Pool
-      2. หากตรงกัน ให้คืนค่ารหัสวิชา เช่น "A1-1" หากตรงหลายข้อให้ใส่ลูกน้ำ "A1-1,B2-1" 
-      3. หากไม่มีงานใดใน Pool ที่ตรงกันเลย ให้ส่งค่าสตริงว่าง "" 
-      4. คืนค่า JSON อย่างเคร่งครัดตาม Schema ที่กำหนดไว้`;
+      const systemPrompt = `คุณคือระบบอัจฉริยะสำหรับจัดทำแผนฝึกอาชีพทวิภาคี หน้าที่ของคุณคือการจับคู่ (Map) งานสถานประกอบการกับพูลงานในรายวิชา
+      **กฎเหล็กการจับคู่:**
+      1. ให้ถือว่าคำกริยาต่อไปนี้มีความหมายเดียวกัน: "ปรับแต่ง" = "ปรับตั้ง" = "ปรับ", "ตรวจสอบ" = "เช็ค", "จัดเตรียม" = "เตรียม"
+      2. การพิจารณาความสอดคล้องให้ดูที่ "ผลลัพธ์ของงาน" เป็นหลัก
+      3. คืนค่าเป็นรหัสเฉพาะของรายวิชาที่กำลังพิจารณาเท่านั้น เช่น A1-1 (ห้ามนำรหัสจากวิชาอื่นมาปน)
+      4. หากงานในสถานประกอบการไม่สอดคล้องกับพูลงานในวิชานั้นๆ ให้ส่งค่าว่าง ""`;
 
       const generationConfig = { responseSchema: { type: "OBJECT", properties: { mappings: { type: "ARRAY", items: { type: "OBJECT", properties: { wId: { type: "STRING" }, mappedSubTaskId: { type: "STRING" }, steps: { type: "ARRAY", items: { type: "OBJECT", properties: { stepIdx: { type: "INTEGER" }, mappedStepId: { type: "STRING" } } } } } } } } } };
 
@@ -1220,13 +1220,15 @@ const App = () => {
     link.href = url; link.download = filename + '.doc'; link.click();
   };
 
+  // ค้นหา const setupFields = [ ... ]; และเปลี่ยนเป็นแบบนี้:
+
   const setupFields = [
-    { k: 'collegeName', l: 'ชื่อวิทยาลัย', i: Building2 },
+    { k: 'collegeName', l: 'ชื่อวิทยาลัย', i: Building2, hideForTrainer: true },
     { k: 'companyName', l: 'ชื่อสถานประกอบการ', i: Briefcase },
     { k: 'level', l: 'ระดับชั้น', i: User },
-    { k: 'fieldOfStudy', l: 'แผนกวิชา', i: BookOpen },
-    { k: 'group', l: 'กลุ่มอาชีพ', i: User },
-    { k: 'major', l: 'สาขาวิชา', i: BookOpen },
+    { k: 'fieldOfStudy', l: 'แผนกวิชา', i: BookOpen, hideForTrainer: true },
+    { k: 'group', l: 'กลุ่มอาชีพ', i: User, hideForTrainer: true },
+    { k: 'major', l: 'สาขาวิชา', i: BookOpen, hideForTrainer: true },
     { k: 'academicYear', l: 'ปีการศึกษา', i: Calendar },
     { k: 'startDate', l: 'วันเริ่มฝึก (ฝอ.1)', i: Clock },
     { k: 'endDate', l: 'วันสิ้นสุดฝึก (ฝอ.1)', i: Clock },
@@ -1234,7 +1236,7 @@ const App = () => {
     { k: 'trainerPosition', l: 'ตำแหน่งครูฝึก', i: Briefcase },
     { k: 'occupation', l: 'อาชีพ / ตำแหน่งงาน', i: HardHat },
     { k: 'department', l: 'ส่วนงาน / จุดฝึก', i: Building2 }
-  ];
+  ].filter(f => !(isWorkplaceTrainer && f.hideForTrainer)); // กรองฟิลด์ที่ไม่ต้องการออกถ้าเป็นครูฝึก
 
   // --- Dynamic Navigation Items (Role Based) ---
   const isWorkplaceTrainer = currentUserRole === 'ครูฝึกในสถานประกอบการ';
@@ -1247,13 +1249,13 @@ const App = () => {
     { id: 'workplace', baseLabel: 'วิเคราะห์สถานประกอบการ', i: Building2 },
     { id: 'reports', baseLabel: 'แสดงรายงาน', i: FileText },
     { id: 'evaluation', baseLabel: 'แบบประเมิน', i: ClipboardCheck },
-    { id: 'share', baseLabel: 'แชร์คลังแผนฝึก', i: UploadCloud },
+    { id: 'share', baseLabel: 'อัพโหลดคลังแผนฝึก', i: UploadCloud },
     { id: 'cloud', baseLabel: 'คลังส่วนกลาง', i: Cloud }, // ให้ครูฝึกเห็นด้วยตามที่ร้องขอ
     { id: 'feedback', baseLabel: 'ประเมินระบบ', i: Star },
     ...(isDeveloper ? [{ id: 'admin', baseLabel: 'จัดการผู้ใช้', i: Users }] : [])
   ].map((item, index) => ({
     ...item,
-    l: item.href || item.id === 'admin' ? item.baseLabel : `${['๑','๒','๓','๔','๕','๖','๗','๘','๙','๑๐'][index] || index + 1}. ${item.baseLabel}`
+    l: item.href || item.id === 'admin' ? item.baseLabel : `${['๑', '๒', '๓', '๔', '๕', '๖', '๗', '๘', '๙', '๑๐'][index] || index + 1}. ${item.baseLabel}`
   }));
 
   // ==========================================
@@ -1324,15 +1326,15 @@ const App = () => {
                 <option value="เจ้าหน้าที่">ตำแหน่ง: เจ้าหน้าที่</option>
                 <option value="ศึกษานิเทศก์">ตำแหน่ง: ศึกษานิเทศก์</option>
               </select>
-              
+
               {authData.role === 'ครูฝึกในสถานประกอบการ' ? (
                 <input type="text" placeholder="ชื่อสถานประกอบการ" className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 font-bold text-xs" value={authData.companyName} onChange={(e) => handleAuthChange('companyName', e.target.value)} required />
               ) : (
                 <input type="text" placeholder="วิทยาลัย" className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 font-bold text-xs" value={authData.college} onChange={(e) => handleAuthChange('college', e.target.value)} required />
               )}
-              
+
               <input type="text" placeholder="แผนกวิชา (ถ้ามี)" className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 font-bold text-xs" value={authData.department} onChange={(e) => handleAuthChange('department', e.target.value)} />
-              
+
               <select className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 font-bold text-xs text-slate-600" value={authData.province} onChange={(e) => handleAuthChange('province', e.target.value)} required>
                 <option value="">-- เลือกจังหวัด --</option>
                 {PROVINCES.map(p => <option key={p} value={p}>{p}</option>)}
@@ -1557,10 +1559,10 @@ const App = () => {
               <button onClick={() => setDeleteModalItem(null)} className="text-slate-400 hover:text-red-500 bg-slate-100 p-2 rounded-full transition-colors"><X size={18} /></button>
             </div>
             <p className="text-sm font-bold text-slate-600 mb-4 leading-relaxed">
-              {isDeveloper ? 'คุณกำลังจะลบข้อมูลของบริษัทต่อไปนี้ออกจากคลังกลางอย่างถาวร:' : 'คุณต้องการส่งคำขอเพื่อแจ้งลบข้อมูลของบริษัท:'} <br/>
+              {isDeveloper ? 'คุณกำลังจะลบข้อมูลของบริษัทต่อไปนี้ออกจากคลังกลางอย่างถาวร:' : 'คุณต้องการส่งคำขอเพื่อแจ้งลบข้อมูลของบริษัท:'} <br />
               <span className="text-red-600 text-base">{deleteModalItem.companyName}</span>
             </p>
-            
+
             {!isDeveloper && (
               <textarea
                 className="w-full border border-slate-200 bg-slate-50 rounded-xl p-4 text-sm font-serif focus:ring-2 focus:ring-red-500 outline-none mb-6 shadow-inner"
@@ -1801,16 +1803,16 @@ const App = () => {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
                 <div className="md:col-span-2">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1 font-serif"><MapPin size={12} /> จังหวัดที่ตั้งสถานประกอบการ</label>
-                    <select
-                      className="w-full mt-1 px-4 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition font-bold shadow-inner text-sm font-serif bg-slate-50"
-                      value={config.province || ''} onChange={e => setConfig({ ...config, province: e.target.value })}
-                    >
-                      <option value="">-- เลือกจังหวัด --</option>
-                      {PROVINCES.map(p => <option key={p} value={p}>{p}</option>)}
-                    </select>
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1 font-serif"><MapPin size={12} /> จังหวัดที่ตั้งสถานประกอบการ</label>
+                  <select
+                    className="w-full mt-1 px-4 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition font-bold shadow-inner text-sm font-serif bg-slate-50"
+                    value={config.province || ''} onChange={e => setConfig({ ...config, province: e.target.value })}
+                  >
+                    <option value="">-- เลือกจังหวัด --</option>
+                    {PROVINCES.map(p => <option key={p} value={p}>{p}</option>)}
+                  </select>
                 </div>
-                
+
                 {setupFields.map(f => {
                   return (
                     <div key={f.k}>
@@ -1970,15 +1972,15 @@ const App = () => {
         {activeTab === 'workplace' && (
           <div className="max-w-6xl mx-auto space-y-8 animate-in slide-in-from-bottom-5 duration-500 font-serif">
             {isDeveloper && editingCloudId && (
-               <div className="bg-amber-100 border border-amber-300 text-amber-800 p-4 rounded-2xl flex items-center justify-between">
-                 <div className="flex items-center gap-2 font-bold text-sm">
-                   <ShieldAlert size={20} className="text-amber-600" />
-                   โหมดแอดมิน: คุณกำลังแก้ไขข้อมูลรหัส {editingCloudId.substring(0,8)}... ของบริษัท {config.companyName}
-                 </div>
-                 <button onClick={() => setEditingCloudId(null)} className="text-xs font-black bg-amber-200 px-3 py-1.5 rounded-lg hover:bg-amber-300 transition-colors">
-                   ยกเลิกการแก้ไข
-                 </button>
-               </div>
+              <div className="bg-amber-100 border border-amber-300 text-amber-800 p-4 rounded-2xl flex items-center justify-between">
+                <div className="flex items-center gap-2 font-bold text-sm">
+                  <ShieldAlert size={20} className="text-amber-600" />
+                  โหมดแอดมิน: คุณกำลังแก้ไขข้อมูลรหัส {editingCloudId.substring(0, 8)}... ของบริษัท {config.companyName}
+                </div>
+                <button onClick={() => setEditingCloudId(null)} className="text-xs font-black bg-amber-200 px-3 py-1.5 rounded-lg hover:bg-amber-300 transition-colors">
+                  ยกเลิกการแก้ไข
+                </button>
+              </div>
             )}
             <div className="bg-white p-10 rounded-3xl border border-slate-200 shadow-sm font-serif">
               <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-10 border-b pb-6 gap-6">
@@ -2059,7 +2061,7 @@ const App = () => {
                                 )}
                               </div>
                             </div>
-                            
+
                             <div className={`mt-3 space-y-2 font-serif ${collapsedWorkplaceSubTasks.has(sub.id) ? 'hidden' : 'block'}`}>
                               <p className={`text-[10px] font-black uppercase border-b pb-1 font-serif ${main.isConfirmed ? 'text-green-600 border-green-100' : 'text-indigo-400 border-indigo-50'}`}>ขั้นตอนการปฏิบัติงาน:</p>
                               {sub.detailed_steps?.map((step, si) => (
@@ -2493,15 +2495,32 @@ const App = () => {
               <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-8 border-b pb-4 gap-4 font-serif">
                 <h3 className="text-xl font-black text-indigo-700 uppercase font-serif tracking-widest flex items-center gap-3"><ClipboardCheck /> แบบประเมินและสรุปผล</h3>
                 <div className="flex flex-wrap sm:flex-row gap-2 w-full lg:w-auto">
-                  <button onClick={() => setActiveEvalView('eval_workplace')} className={`px-4 py-2.5 rounded-2xl text-xs font-bold shadow-sm flex items-center gap-2 transition-all whitespace-nowrap ${activeEvalView === 'eval_workplace' ? 'bg-blue-600 text-white' : 'bg-white text-blue-600 border border-blue-200 hover:bg-blue-50'}`}><FileText size={16} /> 1. ประเมินปฏิบัติงาน (ย่อย)</button>
+                  {/* ปุ่มที่ 1: แสดงให้ทั้งคู่เห็น หรือถ้าต้องการซ่อนจากครูตามสั่ง ให้ใส่ !isWorkplaceTrainer ครอบได้ครับ */}
+                  <button
+                    onClick={() => setActiveEvalView('eval_workplace')}
+                    className={`px-4 py-2.5 rounded-2xl text-xs font-bold shadow-sm flex items-center gap-2 transition-all whitespace-nowrap ${activeEvalView === 'eval_workplace' ? 'bg-blue-600 text-white' : 'bg-white text-blue-600 border border-blue-200 hover:bg-blue-50'}`}
+                  >
+                    <FileText size={16} /> 1. ประเมินปฏิบัติงาน (ย่อย)
+                  </button>
+
+                  {/* [MODIFIED] ส่วนของครูวิทยาลัย: ซ่อน "แบบนิเทศ" และแสดงเฉพาะ "สรุปผลการเรียนรู้รายวิชา" */}
                   {!isWorkplaceTrainer && (
-                    <>
-                      <button onClick={() => setActiveEvalView('eval_supervision')} className={`px-4 py-2.5 rounded-2xl text-xs font-bold shadow-sm flex items-center gap-2 transition-all whitespace-nowrap ${activeEvalView === 'eval_supervision' ? 'bg-indigo-600 text-white' : 'bg-white text-indigo-600 border border-indigo-200 hover:bg-indigo-50'}`}><FileText size={16} /> 2. นิเทศติดตาม (วิชา)</button>
-                      <button onClick={() => setActiveEvalView('dve1102')} className={`px-4 py-2.5 rounded-2xl text-xs font-bold shadow-sm flex items-center gap-2 transition-all whitespace-nowrap ${activeEvalView === 'dve1102' ? 'bg-amber-500 text-white' : 'bg-white text-amber-600 border border-amber-200 hover:bg-amber-50'}`}><FileText size={16} /> 3. สรุป DVE-11-02</button>
-                    </>
+                    <button
+                      onClick={() => setActiveEvalView('dve1102')}
+                      className={`px-4 py-2.5 rounded-2xl text-xs font-bold shadow-sm flex items-center gap-2 transition-all whitespace-nowrap ${activeEvalView === 'dve1102' ? 'bg-amber-500 text-white' : 'bg-white text-amber-600 border border-amber-200 hover:bg-amber-50'}`}
+                    >
+                      <FileText size={16} /> 2. สรุปผลการเรียนรู้ (แยกตามรายวิชา)
+                    </button>
                   )}
+
                   <div className="hidden sm:block border-l border-slate-200 mx-1"></div>
-                  <button onClick={() => setShowDownloadConfirm(activeEvalView)} className="bg-green-600 text-white px-6 py-2.5 rounded-2xl text-xs font-bold hover:bg-green-700 shadow-md active:scale-95 flex items-center gap-2 transition-all whitespace-nowrap"><FileDown size={18} /> ดาวน์โหลดเอกสารนี้</button>
+
+                  <button
+                    onClick={() => setShowDownloadConfirm(activeEvalView)}
+                    className="bg-green-600 text-white px-6 py-2.5 rounded-2xl text-xs font-bold hover:bg-green-700 shadow-md active:scale-95 flex items-center gap-2 transition-all whitespace-nowrap"
+                  >
+                    <FileDown size={18} /> ดาวน์โหลดเอกสารนี้
+                  </button>
                 </div>
               </div>
 
@@ -2856,31 +2875,58 @@ const App = () => {
                           </thead>
                           <tbody>
                             <tr className="bg-slate-50">
-                              <td colSpan="10" className="border border-black p-2 font-bold">ส่วนที่ 1 การปฏิบัติงาน</td>
+                              <td colSpan="10" className="border border-black p-2 font-bold text-left">
+                                ส่วนที่ 1 การปฏิบัติงาน (เรียงตามรหัสงานรายวิชา {sub.id})
+                              </td>
                             </tr>
-                            {mappedTasksForThisSubject.length > 0 ? mappedTasksForThisSubject.map((t, idx) => (
-                              <tr key={idx}>
-                                <td className="border border-black p-2 pl-4 text-left">{t.id} {cleanTaskName(t.workplaceName)}</td>
-                                <td className="border border-black p-1 w-10"></td>
-                                <td className="border border-black p-1 text-center text-[10pt] align-middle text-slate-700">คะแนน</td>
-                                <td className="border border-black p-2"></td>
-                                <td className="border border-black p-2"></td>
-                                <td className="border border-black p-2"></td>
-                                <td className="border border-black p-2 bg-blue-50/50"></td>
-                                <td className="border border-black p-2"></td>
-                                <td className="border border-black p-2 bg-blue-50/50"></td>
-                                <td className="border border-black p-2"></td>
-                              </tr>
-                            )) : (
-                              <tr>
-                                <td className="border border-black p-2 pl-6 text-slate-400 text-center" colSpan="10">ไม่มีงานย่อยที่สอดคล้องกับสถานประกอบการ</td>
-                              </tr>
-                            )}
+
+                            {(() => {
+                              // 1. รวมงานย่อยทั้งหมดจากรายวิชาอ้างอิง (Pool) ของวิชานี้
+                              const subjectSubTasks = sub.mainTasks?.flatMap(mt => mt.subTasks || []) || [];
+
+                              // 2. กรองเฉพาะงานย่อยที่ถูกระบุว่าได้ฝึกจริง (มีการ Map รหัสไว้ในงานสถานประกอบการ)
+                              const trainedTasks = subjectSubTasks.filter(st => {
+                                return workplaceTasksFlat.some(wt => {
+                                  const mainIds = String(wt.id || '').split(',').map(i => i.trim().toUpperCase());
+                                  const stepIds = (wt.detailed_steps || []).flatMap(s =>
+                                    String(s.subjectTaskId || '').split(',').map(i => i.trim().toUpperCase())
+                                  );
+                                  return mainIds.includes(st.id.toUpperCase()) || stepIds.includes(st.id.toUpperCase());
+                                });
+                              });
+
+                              // 3. แสดงผลทีละบรรยากาศตามรหัสงานย่อย (A1-1, A1-2...)
+                              return trainedTasks.length > 0 ? trainedTasks.map((st) => (
+                                <tr key={st.id}>
+                                  <td className="border border-black p-2 pl-4 text-left font-serif">
+                                    {/* แสดงรหัสงานย่อย และ ชื่องานจากวิชาอ้างอิง (ไม่มีเลขลำดับ 1 2 3) */}
+                                    <span className="font-bold">{st.id}</span> {cleanTaskName(st.name)}
+                                  </td>
+                                  <td className="border border-black p-1 w-10"></td>
+                                  <td className="border border-black p-1 text-center text-[10pt] align-middle text-slate-700">คะแนน</td>
+                                  <td className="border border-black p-2"></td>
+                                  <td className="border border-black p-2"></td>
+                                  <td className="border border-black p-2"></td>
+                                  <td className="border border-black p-2 bg-blue-50/50"></td>
+                                  <td className="border border-black p-2"></td>
+                                  <td className="border border-black p-2 bg-blue-50/50"></td>
+                                  <td className="border border-black p-2"></td>
+                                </tr>
+                              )) : (
+                                <tr>
+                                  <td colSpan="10" className="border border-black p-4 text-center text-slate-400 italic">
+                                    --- ไม่พบรายการงานย่อยของรายวิชา {sub.id} ที่ตรงกับแผนฝึกนี้ ---
+                                  </td>
+                                </tr>
+                              );
+                            })()}
+
+                            {/* ส่วนที่ 2 ด้านกิจนิสัย */}
                             <tr className="bg-blue-100/30">
                               <td colSpan="10" className="border border-black p-2 font-bold pl-6">ส่วนที่ 2 ด้านกิจนิสัย</td>
                             </tr>
-                            {selectedBehaviors.length > 0 ? selectedBehaviors.map((beh, idx) => (
-                              <tr key={`dve1102-beh-${idx}`}>
+                            {selectedBehaviors.map((beh, idx) => (
+                              <tr key={`beh-${idx}`}>
                                 <td className="border border-black p-2 pl-4 text-left">{idx + 1}. {beh}</td>
                                 <td className="border border-black p-1 w-10"></td>
                                 <td className="border border-black p-1 text-center text-[10pt] align-middle text-slate-700">คะแนน</td>
@@ -2892,13 +2938,11 @@ const App = () => {
                                 <td className="border border-black p-2 bg-blue-50/50"></td>
                                 <td className="border border-black p-2"></td>
                               </tr>
-                            )) : (
-                              <tr>
-                                <td className="border border-black p-2 pl-6 text-slate-400 text-center" colSpan="10">ไม่ได้เลือกหัวข้อด้านกิจนิสัย</td>
-                              </tr>
-                            )}
-                            <tr>
-                              <td className="border border-black p-2 font-bold text-center">รวมคะแนนฝึกในสถานประกอบการ</td>
+                            ))}
+
+                            {/* แถวสรุปผลคะแนน */}
+                            <tr className="font-bold">
+                              <td className="border border-black p-2 text-center">รวมคะแนนฝึกในสถานประกอบการ</td>
                               <td className="border border-black p-1"></td>
                               <td className="border border-black p-1 text-center font-bold text-[10pt] align-middle text-slate-700">คะแนน</td>
                               <td className="border border-black p-2"></td>
@@ -2908,29 +2952,6 @@ const App = () => {
                               <td className="border border-black p-2 bg-gray-200"></td>
                               <td className="border border-black p-2 bg-gray-200"></td>
                               <td className="border border-black p-2 bg-yellow-200"></td>
-                            </tr>
-                            <tr className="bg-slate-50">
-                              <td colSpan="10" className="border border-black p-2 font-bold text-center">สมรรถนะที่จัดการเรียนการสอนเพิ่มเติม(ที่ไม่สอดคล้องกับงานในสถานประกอบการ)</td>
-                            </tr>
-                            {unmappedTasksForThisSubject.length > 0 ? unmappedTasksForThisSubject.map((ut, idx) => (
-                              <tr key={idx}>
-                                <td className="border border-black p-2 pl-4 text-left">{ut.id} {cleanTaskName(ut.name)}</td>
-                                <td className="border border-black p-1"></td>
-                                <td className="border border-black p-1 text-center text-[10pt] align-middle text-slate-700">คะแนน</td>
-                                <td colSpan="4" className="border border-black p-2 bg-gray-200"></td>
-                                <td colSpan="2" className="border border-black p-2"></td>
-                                <td className="border border-black p-2"></td>
-                              </tr>
-                            )) : (
-                              <tr>
-                                <td colSpan="10" className="border border-black p-2 text-center text-slate-400">ไม่มี (สอนครอบคลุมทุกจุดประสงค์แล้ว)</td>
-                              </tr>
-                            )}
-                            <tr className="font-bold">
-                              <td className="border border-black p-2 text-center">รวมคะแนนเต็ม</td>
-                              <td colSpan="2" className="border border-black p-2 text-center">100<br /><span className="text-[10pt] font-normal text-slate-400">คะแนน</span></td>
-                              <td colSpan="6" className="border border-black p-2 text-center align-middle">รวมคะแนนทั้งรายวิชา</td>
-                              <td className="border border-black p-2"></td>
                             </tr>
                           </tbody>
                         </table>
@@ -2964,7 +2985,7 @@ const App = () => {
               <div className="flex-1 space-y-2">
                 <h2 className="text-2xl font-black flex items-center gap-2"><UploadCloud /> {isDeveloper && editingCloudId ? 'บันทึกการแก้ไขทับข้อมูลเดิม' : 'แชร์แผนฝึกนี้เข้าสู่คลังกลาง'}</h2>
                 <p className="text-indigo-200 text-sm">
-                  {isDeveloper && editingCloudId 
+                  {isDeveloper && editingCloudId
                     ? 'สิทธิ์แอดมิน: คุณสามารถบันทึกข้อมูลเพื่ออัปเดตทับข้อมูลเดิมในคลังกลางได้'
                     : 'เมื่อทำแผนฝึกของบริษัทเสร็จแล้ว คุณสามารถแชร์ขึ้นคลังข้อมูล เพื่อให้คุณครูท่านอื่นนำไปใช้ต่อได้'}
                 </p>
@@ -2979,8 +3000,8 @@ const App = () => {
                   </ul>
                 </div>
               </div>
-              <button 
-                onClick={shareToCloud} 
+              <button
+                onClick={shareToCloud}
                 className="bg-white text-indigo-600 px-8 py-4 rounded-2xl font-black text-sm hover:bg-indigo-50 shadow-lg active:scale-95 transition-all w-full md:w-auto flex items-center justify-center gap-2"
               >
                 {isDeveloper && editingCloudId ? <><Edit size={20} /> อัปเดตทับข้อมูลเดิม</> : <><Cloud size={20} /> ยืนยันการแชร์ข้อมูล</>}
@@ -3001,11 +3022,11 @@ const App = () => {
                   </h2>
                   <p className="text-sm text-slate-500 mt-1">เลือกดาวน์โหลดหรือนำเข้าแผนฝึกของสถานประกอบการต่างๆ ที่เพื่อนครูจัดทำไว้</p>
                 </div>
-                
+
                 <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
                   <div className="relative">
                     <Filter className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
-                    <select 
+                    <select
                       className="w-full sm:w-48 pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-700 outline-none focus:ring-2 focus:ring-indigo-500 appearance-none"
                       value={filterProvince}
                       onChange={(e) => setFilterProvince(e.target.value)}
@@ -3016,9 +3037,9 @@ const App = () => {
                   </div>
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
-                    <input 
-                      type="text" 
-                      placeholder="ค้นหาสถานประกอบการ..." 
+                    <input
+                      type="text"
+                      placeholder="ค้นหาสถานประกอบการ..."
                       className="w-full sm:w-64 pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-700 outline-none focus:ring-2 focus:ring-indigo-500"
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
@@ -3043,9 +3064,9 @@ const App = () => {
                       <div className="flex-1">
                         <div className="flex items-start justify-between gap-2 mb-3">
                           <h3 className="font-black text-indigo-900 text-lg leading-tight line-clamp-2 pr-6" title={item.companyName}>{item.companyName || 'ไม่ระบุชื่อบริษัท'}</h3>
-                          <button 
-                            onClick={() => setDeleteModalItem(item)} 
-                            className="absolute top-5 right-4 text-slate-300 hover:text-red-500 p-1 flex-shrink-0 transition-colors" 
+                          <button
+                            onClick={() => setDeleteModalItem(item)}
+                            className="absolute top-5 right-4 text-slate-300 hover:text-red-500 p-1 flex-shrink-0 transition-colors"
                             title={isDeveloper ? "ลบข้อมูล (Admin)" : "แจ้งลบข้อมูล"}
                           >
                             <Trash2 size={18} />
@@ -3056,7 +3077,7 @@ const App = () => {
                           <p className="text-xs font-bold text-slate-600 flex items-center gap-2"><User size={14} className="text-indigo-500" /> ระดับ: {item.level || item.config?.level || 'ไม่ระบุ'}</p>
                           <p className="text-xs font-bold text-slate-600 flex items-center gap-2"><User size={14} className="text-blue-500" /> จัดทำโดย: {item.creatorName || 'ไม่ระบุ'}</p>
                           <p className="text-[10px] text-slate-400 flex items-center gap-2 mt-2"><Clock size={12} /> อัปโหลดเมื่อ: {item.createdAt?.toDate ? item.createdAt.toDate().toLocaleDateString('th-TH') : 'ไม่ระบุ'}</p>
-                          
+
                           {item.deleteRequest && (
                             <div className="mt-3 bg-orange-100 border border-orange-200 text-orange-800 text-[10px] p-2 rounded-xl font-bold flex flex-col gap-2">
                               <div className="flex items-start gap-1.5">
@@ -3072,16 +3093,16 @@ const App = () => {
                           )}
                         </div>
                       </div>
-                      
+
                       <div className="flex gap-2 mt-auto pt-4 border-t border-slate-200">
-                        <button 
+                        <button
                           onClick={() => loadFromCloudItem(item)}
                           className="flex-1 bg-indigo-100 hover:bg-indigo-200 text-indigo-700 py-2 rounded-xl text-xs font-black transition-colors flex justify-center items-center gap-1"
                           title={isDeveloper ? "นำเข้าเพื่อแก้ไขทับข้อมูลเดิม" : "นำเข้าเพื่อแก้ไข"}
                         >
                           {isDeveloper ? <Edit size={14} /> : <Wand2 size={14} />} {isDeveloper ? 'แก้ไขข้อมูล' : 'นำเข้า'}
                         </button>
-                        <button 
+                        <button
                           onClick={() => downloadCloudItemAsFile(item)}
                           className="flex-1 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 py-2 rounded-xl text-xs font-black transition-colors flex justify-center items-center gap-1"
                         >
@@ -3165,8 +3186,9 @@ const App = () => {
           </button>
         ))}
       </nav>
-      
-      <style dangerouslySetInnerHTML={{__html: `
+
+      <style dangerouslySetInnerHTML={{
+        __html: `
         .hide-scrollbar::-webkit-scrollbar { display: none; }
         .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
       `}} />
