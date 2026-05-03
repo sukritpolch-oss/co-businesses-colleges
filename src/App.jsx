@@ -1245,7 +1245,7 @@ const App = () => {
       { id: 'findsubject', baseLabel: 'ค้นหาวิชา', href: 'https://tools.kruarm.net/find-subject.html', i: FileSearch },
       { id: 'subjects', baseLabel: 'วิเคราะห์รายวิชา', i: GraduationCap }
     ] : []),
-    { id: 'workplace', baseLabel: 'งานสถานประกอบการ', i: Building2 },
+    { id: 'workplace', baseLabel: 'งานบริษัท', i: Building2 },
     { id: 'reports', baseLabel: 'รายงาน', i: FileText },
     { id: 'evaluation', baseLabel: 'แบบประเมิน', i: ClipboardCheck },
     { id: 'share', baseLabel: 'แชร์แผนฝึก', i: UploadCloud },
