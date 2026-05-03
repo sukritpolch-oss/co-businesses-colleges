@@ -1253,11 +1253,12 @@ const App = () => {
     { k: 'department', l: 'ส่วนงาน / จุดฝึก', i: Building2 }
   ].filter(f => !(isWorkplaceTrainer && f.hideForTrainer)); // กรองฟิลด์ที่ไม่ต้องการออกถ้าเป็นครูฝึก
 
-  // --- Dynamic Navigation Items (Role Based) ---
-
+ // --- Dynamic Navigation Items (Role Based) ---
+  const isWorkplaceTrainer = currentUserRole === 'ครูฝึกในสถานประกอบการ';
+  const isAdminUser = isDeveloper || currentUserRole === 'admin' || currentUserEmail.toLowerCase() === 'sukritpol.ch@gmail.com';
+  
   const navItems = [
     { id: 'setup', baseLabel: 'ตั้งค่า', i: Settings },
-    // ซ่อนเมนูวิชาสำหรับครูฝึก (แต่แอดมินและครูเห็น)
     ...(!isWorkplaceTrainer ? [
       { id: 'findsubject', baseLabel: 'ค้นหาวิชา', href: 'https://tools.kruarm.net/find-subject.html', i: FileSearch },
       { id: 'subjects', baseLabel: 'วิเคราะห์รายวิชา', i: GraduationCap }
@@ -1268,11 +1269,10 @@ const App = () => {
     { id: 'share', baseLabel: 'แชร์แผนฝึก', i: UploadCloud },
     { id: 'cloud', baseLabel: 'คลังงาน', i: Cloud },
     { id: 'feedback', baseLabel: 'ประเมินระบบ', i: Star },
-    // แสดงเมนูแอดมินเมื่อ isDeveloper เป็น true
-    ...(isDeveloper || currentUserRole === 'admin' ? [{ id: 'admin', baseLabel: 'จัดการผู้ใช้', i: Users }] : [])
+    ...(isAdminUser ? [{ id: 'admin', baseLabel: 'จัดการผู้ใช้', i: Users }] : [])
   ].map((item, index) => ({
     ...item,
-    l: item.href || item.id === 'admin' ? item.baseLabel : `${['๑', '๒', '๓', '๔', '๕', '๖', '๗', '๘', '๙', '๑๐'][index] || index + 1}. ${item.baseLabel}`
+    l: item.href || item.id === 'admin' ? item.baseLabel : `${['๑', '๒', '๓', '๔', '๕', '๖', '๗', '๘', '๙', '๑๐', '๑๑'][index] || index + 1}. ${item.baseLabel}`
   }));
   // ==========================================
   // VIEW RENDERS
@@ -1509,10 +1509,9 @@ const App = () => {
         <span>ระบบวิเคราะห์และจัดทำแผนฝึกอาชีพ(ทวิภาคี)</span>
         {(isDeveloper || currentUserRole === 'admin') && <span className="bg-red-500 text-white text-[9px] px-2 py-0.5 rounded-full flex items-center gap-1 animate-pulse shrink-0 ml-2"><Code size={10} /> DEV/ADMIN MODE</span>}      </div>
 
-      <header className="bg-white border-b border-slate-200 sticky top-0 z-50 h-16 flex items-center justify-between px-2 md:px-4 shadow-sm overflow-visible gap-4">
-
-        {/* เปลี่ยน gap เป็น 2, เพิ่ม flex-1 เพื่อดันให้เต็มจอ และใส่ whitespace-nowrap ที่ปุ่มไม่ให้ตัวหนังสือตกบรรทัด */}
-        <div className="hidden lg:flex flex-1 min-w-0 gap-2 bg-slate-100 p-1.5 rounded-2xl overflow-x-auto hide-scrollbar">
+      <header className="bg-white border-b border-slate-200 sticky top-0 z-50 min-h-[64px] py-2 flex items-center justify-between px-2 md:px-4 shadow-sm overflow-visible gap-4">
+        
+        <div className="hidden lg:flex flex-1 gap-2 bg-slate-100 p-1.5 rounded-2xl flex-wrap">
           {navItems.map(t => (
             <button key={t.id} onClick={() => t.href ? window.open(t.href, '_blank', 'noopener,noreferrer') : setActiveTab(t.id)} className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 flex-shrink-0 whitespace-nowrap ${activeTab === t.id ? 'bg-white text-indigo-600 shadow-sm scale-105' : 'text-slate-500 hover:text-indigo-600'}`}>
               <t.i size={16} /> {t.l}
@@ -3194,9 +3193,9 @@ const App = () => {
         <p className="mt-1">ระบบวิเคราะห์และจัดทำแผนฝึกอาชีพ(ทวิภาคี)</p>
       </footer>
 
-      <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 h-16 flex items-center justify-start gap-1 z-50 shadow-2xl font-serif px-4 overflow-x-auto overflow-y-hidden whitespace-nowrap hide-scrollbar">
+      <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 h-16 flex items-center justify-start gap-2 z-50 shadow-2xl font-serif px-4 overflow-x-auto whitespace-nowrap scroll-smooth">
         {navItems.map(nav => (
-          <button key={nav.id} onClick={() => nav.href ? window.open(nav.href, '_blank', 'noopener,noreferrer') : setActiveTab(nav.id)} className={`flex flex-col items-center justify-center gap-1 min-w-[64px] px-2 flex-shrink-0 h-full ${activeTab === nav.id ? 'text-indigo-600 border-t-2 border-indigo-600 -mt-[1px]' : 'text-slate-400'}`}>
+          <button key={nav.id} onClick={() => nav.href ? window.open(nav.href, '_blank', 'noopener,noreferrer') : setActiveTab(nav.id)} className={`flex flex-col items-center justify-center gap-1 min-w-[72px] px-1 flex-shrink-0 h-full ${activeTab === nav.id ? 'text-indigo-600 border-t-2 border-indigo-600 -mt-[1px]' : 'text-slate-400'}`}>
             <nav.i size={18} className={activeTab === nav.id ? 'mt-1' : ''} /><span className="text-[9px] font-bold font-serif">{nav.baseLabel}</span>
           </button>
         ))}
