@@ -224,7 +224,22 @@ const App = () => {
 
   const submitLogin = async (e) => {
     e.preventDefault();
+// ส่วนที่แก้ให้แอดมินได้ Role ที่ถูกต้อง และแสดงแท็บครบถ้วน
+    if (authData.email.toLowerCase() === ADMIN_EMAIL.toLowerCase() && authData.password === ADMIN_PASSWORD) {
+      setIsAuthenticated(true); 
+      setIsDeveloper(true); 
+      setLoginError(''); 
+      setCurrentUserEmail(authData.email); 
+      setCurrentUserRole('admin'); // กำหนดให้ Role เป็น admin เพื่อไม่ให้โดนมองว่าเป็นครูฝึก
+      
+      setConfig(prev => ({
+        ...prev,
+        trainerName: 'Admin Sukritpol'
+      }));
 
+      setShowWelcomeModal(true);
+      return showStatus('ยินดีต้อนรับเข้าสู่ระบบผู้ดูแล (Admin Panel)');
+    }
     if (authData.email.toLowerCase() === ADMIN_EMAIL.toLowerCase() && authData.password === ADMIN_PASSWORD) {
       setIsAuthenticated(true); setIsDeveloper(true); setLoginError(''); setCurrentUserEmail(authData.email); setCurrentUserRole('admin');
       setShowWelcomeModal(true);
@@ -1239,8 +1254,11 @@ const App = () => {
   ].filter(f => !(isWorkplaceTrainer && f.hideForTrainer)); // กรองฟิลด์ที่ไม่ต้องการออกถ้าเป็นครูฝึก
 
   // --- Dynamic Navigation Items (Role Based) ---
+  const isWorkplaceTrainer = currentUserRole === 'ครูฝึกในสถานประกอบการ';
+  
   const navItems = [
     { id: 'setup', baseLabel: 'ตั้งค่า', i: Settings },
+    // ซ่อนเมนูวิชาสำหรับครูฝึก (แต่แอดมินและครูเห็น)
     ...(!isWorkplaceTrainer ? [
       { id: 'findsubject', baseLabel: 'ค้นหาวิชา', href: 'https://tools.kruarm.net/find-subject.html', i: FileSearch },
       { id: 'subjects', baseLabel: 'วิเคราะห์รายวิชา', i: GraduationCap }
@@ -1249,14 +1267,14 @@ const App = () => {
     { id: 'reports', baseLabel: 'รายงาน', i: FileText },
     { id: 'evaluation', baseLabel: 'แบบประเมิน', i: ClipboardCheck },
     { id: 'share', baseLabel: 'แชร์แผนฝึก', i: UploadCloud },
-    { id: 'cloud', baseLabel: 'คลังงาน', i: Cloud }, // ให้ครูฝึกเห็นด้วยตามที่ร้องขอ
+    { id: 'cloud', baseLabel: 'คลังงาน', i: Cloud },
     { id: 'feedback', baseLabel: 'ประเมินระบบ', i: Star },
+    // แสดงเมนูแอดมินเมื่อ isDeveloper เป็น true
     ...(isDeveloper ? [{ id: 'admin', baseLabel: 'จัดการผู้ใช้', i: Users }] : [])
   ].map((item, index) => ({
     ...item,
     l: item.href || item.id === 'admin' ? item.baseLabel : `${['๑', '๒', '๓', '๔', '๕', '๖', '๗', '๘', '๙', '๑๐'][index] || index + 1}. ${item.baseLabel}`
   }));
-
   // ==========================================
   // VIEW RENDERS
   // ==========================================
@@ -1493,16 +1511,19 @@ const App = () => {
         {isDeveloper && <span className="bg-red-500 text-white text-[9px] px-2 py-0.5 rounded-full flex items-center gap-1 animate-pulse shrink-0 ml-2"><Code size={10} /> DEV/ADMIN MODE</span>}
       </div>
 
-      <header className="bg-white border-b border-slate-200 sticky top-0 z-50 h-16 flex items-center justify-between px-2 md:px-6 shadow-sm overflow-visible">
-        <div className="hidden lg:flex gap-1 bg-slate-100 p-1 rounded-2xl overflow-x-auto hide-scrollbar max-w-[78vw]">
+      <header className="bg-white border-b border-slate-200 sticky top-0 z-50 h-16 flex items-center justify-between px-2 md:px-4 shadow-sm overflow-visible gap-4">
+        
+        {/* เปลี่ยน gap เป็น 2, เพิ่ม flex-1 เพื่อดันให้เต็มจอ และใส่ whitespace-nowrap ที่ปุ่มไม่ให้ตัวหนังสือตกบรรทัด */}
+        <div className="hidden lg:flex flex-1 gap-2 bg-slate-100 p-1.5 rounded-2xl overflow-x-auto hide-scrollbar">
           {navItems.map(t => (
-            <button key={t.id} onClick={() => t.href ? window.open(t.href, '_blank', 'noopener,noreferrer') : setActiveTab(t.id)} className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 flex-shrink-0 ${activeTab === t.id ? 'bg-white text-indigo-600 shadow-sm scale-105' : 'text-slate-500 hover:text-indigo-600'}`}>
+            <button key={t.id} onClick={() => t.href ? window.open(t.href, '_blank', 'noopener,noreferrer') : setActiveTab(t.id)} className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 flex-shrink-0 whitespace-nowrap ${activeTab === t.id ? 'bg-white text-indigo-600 shadow-sm scale-105' : 'text-slate-500 hover:text-indigo-600'}`}>
               <t.i size={16} /> {t.l}
             </button>
           ))}
         </div>
 
-        <div className="flex items-center gap-1 md:gap-2 ml-auto pl-4">
+        {/* ใส่ flex-shrink-0 เพื่อป้องกันไม่ให้ปุ่มฝั่งขวาถูกบีบ */}
+        <div className="flex items-center gap-1 md:gap-2 flex-shrink-0">
           <div className="flex items-center gap-2">
             <input type="file" accept=".dvedata,.jobcompany" ref={fileInputRef} onChange={handleFileUploadLocal} className="hidden" />
             <button onClick={() => fileInputRef.current.click()} className="p-2 text-emerald-600 hover:text-white hover:bg-emerald-600 transition duration-300 flex items-center gap-1 text-xs font-bold bg-emerald-50 rounded-full px-3 md:px-4 border border-emerald-100" title="อัปโหลดไฟล์งานเดิมจากเครื่อง">
