@@ -1221,7 +1221,7 @@ const App = () => {
   };
 
   // ค้นหา const setupFields = [ ... ]; และเปลี่ยนเป็นแบบนี้:
-
+  const isWorkplaceTrainer = currentUserRole === 'ครูฝึกในสถานประกอบการ';
   const setupFields = [
     { k: 'collegeName', l: 'ชื่อวิทยาลัย', i: Building2, hideForTrainer: true },
     { k: 'companyName', l: 'ชื่อสถานประกอบการ', i: Briefcase },
@@ -1239,7 +1239,6 @@ const App = () => {
   ].filter(f => !(isWorkplaceTrainer && f.hideForTrainer)); // กรองฟิลด์ที่ไม่ต้องการออกถ้าเป็นครูฝึก
 
   // --- Dynamic Navigation Items (Role Based) ---
-  const isWorkplaceTrainer = currentUserRole === 'ครูฝึกในสถานประกอบการ';
   const navItems = [
     { id: 'setup', baseLabel: 'ตั้งค่า', i: Settings },
     ...(!isWorkplaceTrainer ? [
@@ -2881,25 +2880,22 @@ const App = () => {
                             </tr>
 
                             {(() => {
-                              // 1. รวมงานย่อยทั้งหมดจากรายวิชาอ้างอิง (Pool) ของวิชานี้
+                              // 1. ดึงงานย่อยทั้งหมดจากพูล (Pool) ของรายวิชานี้
                               const subjectSubTasks = sub.mainTasks?.flatMap(mt => mt.subTasks || []) || [];
-
-                              // 2. กรองเฉพาะงานย่อยที่ถูกระบุว่าได้ฝึกจริง (มีการ Map รหัสไว้ในงานสถานประกอบการ)
-                              const trainedTasks = subjectSubTasks.filter(st => {
+                              
+                              // 2. กรองเฉพาะงานย่อยที่ถูกนำมาจับคู่ (Mapped) กับงานในสถานประกอบการแล้ว
+                              const filteredTasks = subjectSubTasks.filter(st => {
                                 return workplaceTasksFlat.some(wt => {
-                                  const mainIds = String(wt.id || '').split(',').map(i => i.trim().toUpperCase());
-                                  const stepIds = (wt.detailed_steps || []).flatMap(s =>
-                                    String(s.subjectTaskId || '').split(',').map(i => i.trim().toUpperCase())
-                                  );
-                                  return mainIds.includes(st.id.toUpperCase()) || stepIds.includes(st.id.toUpperCase());
+                                  const ids = String(wt.id || '').split(',').map(i => i.trim().toUpperCase());
+                                  const stepIds = (wt.detailed_steps || []).flatMap(s => String(s.subjectTaskId || '').split(',').map(i => i.trim().toUpperCase()));
+                                  return ids.includes(st.id.toUpperCase()) || stepIds.includes(st.id.toUpperCase());
                                 });
                               });
 
-                              // 3. แสดงผลทีละบรรยากาศตามรหัสงานย่อย (A1-1, A1-2...)
-                              return trainedTasks.length > 0 ? trainedTasks.map((st) => (
-                                <tr key={st.id}>
+                              // 3. แสดงผลเรียงตามรหัสงานย่อยรายวิชา (เช่น A1-1, A1-2) โดยไม่มีเลขลำดับ 1. 2. 3. นำหน้า
+                              return filteredTasks.length > 0 ? filteredTasks.map((st) => (
+                                <tr key={st.id} className="align-top">
                                   <td className="border border-black p-2 pl-4 text-left font-serif">
-                                    {/* แสดงรหัสงานย่อย และ ชื่องานจากวิชาอ้างอิง (ไม่มีเลขลำดับ 1 2 3) */}
                                     <span className="font-bold">{st.id}</span> {cleanTaskName(st.name)}
                                   </td>
                                   <td className="border border-black p-1 w-10"></td>
@@ -2914,8 +2910,8 @@ const App = () => {
                                 </tr>
                               )) : (
                                 <tr>
-                                  <td colSpan="10" className="border border-black p-4 text-center text-slate-400 italic">
-                                    --- ไม่พบรายการงานย่อยของรายวิชา {sub.id} ที่ตรงกับแผนฝึกนี้ ---
+                                  <td colSpan="10" className="border border-black p-2 text-center text-slate-400 italic">
+                                    -- ไม่พบงานย่อยของรายวิชา {sub.id} ที่สอดคล้องกับการฝึก --
                                   </td>
                                 </tr>
                               );
@@ -2926,7 +2922,7 @@ const App = () => {
                               <td colSpan="10" className="border border-black p-2 font-bold pl-6">ส่วนที่ 2 ด้านกิจนิสัย</td>
                             </tr>
                             {selectedBehaviors.map((beh, idx) => (
-                              <tr key={`beh-${idx}`}>
+                              <tr key={`beh-${idx}`} className="align-top">
                                 <td className="border border-black p-2 pl-4 text-left">{idx + 1}. {beh}</td>
                                 <td className="border border-black p-1 w-10"></td>
                                 <td className="border border-black p-1 text-center text-[10pt] align-middle text-slate-700">คะแนน</td>
@@ -2940,7 +2936,7 @@ const App = () => {
                               </tr>
                             ))}
 
-                            {/* แถวสรุปผลคะแนน */}
+                            {/* ส่วนสรุปคะแนน */}
                             <tr className="font-bold">
                               <td className="border border-black p-2 text-center">รวมคะแนนฝึกในสถานประกอบการ</td>
                               <td className="border border-black p-1"></td>
