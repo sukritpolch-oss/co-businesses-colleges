@@ -1245,10 +1245,10 @@ const App = () => {
       { id: 'findsubject', baseLabel: 'ค้นหาวิชา', href: 'https://tools.kruarm.net/find-subject.html', i: FileSearch },
       { id: 'subjects', baseLabel: 'วิเคราะห์รายวิชา', i: GraduationCap }
     ] : []),
-    { id: 'workplace', baseLabel: 'วิเคราะห์สถานประกอบการ', i: Building2 },
-    { id: 'reports', baseLabel: 'แสดงรายงาน', i: FileText },
+    { id: 'workplace', baseLabel: 'งานสถานประกอบการ', i: Building2 },
+    { id: 'reports', baseLabel: 'รายงาน', i: FileText },
     { id: 'evaluation', baseLabel: 'แบบประเมิน', i: ClipboardCheck },
-    { id: 'share', baseLabel: 'อัพโหลดคลังแผนฝึก', i: UploadCloud },
+    { id: 'share', baseLabel: 'แชร์แผนฝึก', i: UploadCloud },
     { id: 'cloud', baseLabel: 'คลังส่วนกลาง', i: Cloud }, // ให้ครูฝึกเห็นด้วยตามที่ร้องขอ
     { id: 'feedback', baseLabel: 'ประเมินระบบ', i: Star },
     ...(isDeveloper ? [{ id: 'admin', baseLabel: 'จัดการผู้ใช้', i: Users }] : [])
