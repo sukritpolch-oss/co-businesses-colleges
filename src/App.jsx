@@ -1254,7 +1254,6 @@ const App = () => {
   ].filter(f => !(isWorkplaceTrainer && f.hideForTrainer)); // กรองฟิลด์ที่ไม่ต้องการออกถ้าเป็นครูฝึก
 
  // --- Dynamic Navigation Items (Role Based) ---
-  const isWorkplaceTrainer = currentUserRole === 'ครูฝึกในสถานประกอบการ';
   const isAdminUser = isDeveloper || currentUserRole === 'admin' || currentUserEmail.toLowerCase() === 'sukritpol.ch@gmail.com';
   
   const navItems = [
