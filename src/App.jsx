@@ -224,14 +224,14 @@ const App = () => {
 
   const submitLogin = async (e) => {
     e.preventDefault();
-// ส่วนที่แก้ให้แอดมินได้ Role ที่ถูกต้อง และแสดงแท็บครบถ้วน
+    // ส่วนที่แก้ให้แอดมินได้ Role ที่ถูกต้อง และแสดงแท็บครบถ้วน
     if (authData.email.toLowerCase() === ADMIN_EMAIL.toLowerCase() && authData.password === ADMIN_PASSWORD) {
-      setIsAuthenticated(true); 
-      setIsDeveloper(true); 
-      setLoginError(''); 
-      setCurrentUserEmail(authData.email); 
+      setIsAuthenticated(true);
+      setIsDeveloper(true);
+      setLoginError('');
+      setCurrentUserEmail(authData.email);
       setCurrentUserRole('admin'); // กำหนดให้ Role เป็น admin เพื่อไม่ให้โดนมองว่าเป็นครูฝึก
-      
+
       setConfig(prev => ({
         ...prev,
         trainerName: 'Admin Sukritpol'
@@ -1254,7 +1254,7 @@ const App = () => {
   ].filter(f => !(isWorkplaceTrainer && f.hideForTrainer)); // กรองฟิลด์ที่ไม่ต้องการออกถ้าเป็นครูฝึก
 
   // --- Dynamic Navigation Items (Role Based) ---
-   
+
   const navItems = [
     { id: 'setup', baseLabel: 'ตั้งค่า', i: Settings },
     // ซ่อนเมนูวิชาสำหรับครูฝึก (แต่แอดมินและครูเห็น)
@@ -1269,7 +1269,7 @@ const App = () => {
     { id: 'cloud', baseLabel: 'คลังงาน', i: Cloud },
     { id: 'feedback', baseLabel: 'ประเมินระบบ', i: Star },
     // แสดงเมนูแอดมินเมื่อ isDeveloper เป็น true
-    ...(isDeveloper ? [{ id: 'admin', baseLabel: 'จัดการผู้ใช้', i: Users }] : [])
+    ...(isDeveloper || currentUserRole === 'admin' ? [{ id: 'admin', baseLabel: 'จัดการผู้ใช้', i: Users }] : [])
   ].map((item, index) => ({
     ...item,
     l: item.href || item.id === 'admin' ? item.baseLabel : `${['๑', '๒', '๓', '๔', '๕', '๖', '๗', '๘', '๙', '๑๐'][index] || index + 1}. ${item.baseLabel}`
@@ -1507,13 +1507,12 @@ const App = () => {
       <div className="bg-indigo-700 text-white py-3 px-4 text-center text-base md:text-lg font-black shadow-md font-serif z-[70] relative flex items-center justify-center gap-2">
         <ClipboardCheck size={22} className="shrink-0" />
         <span>ระบบวิเคราะห์และจัดทำแผนฝึกอาชีพ(ทวิภาคี)</span>
-        {isDeveloper && <span className="bg-red-500 text-white text-[9px] px-2 py-0.5 rounded-full flex items-center gap-1 animate-pulse shrink-0 ml-2"><Code size={10} /> DEV/ADMIN MODE</span>}
-      </div>
+        {(isDeveloper || currentUserRole === 'admin') && <span className="bg-red-500 text-white text-[9px] px-2 py-0.5 rounded-full flex items-center gap-1 animate-pulse shrink-0 ml-2"><Code size={10} /> DEV/ADMIN MODE</span>}      </div>
 
       <header className="bg-white border-b border-slate-200 sticky top-0 z-50 h-16 flex items-center justify-between px-2 md:px-4 shadow-sm overflow-visible gap-4">
-        
+
         {/* เปลี่ยน gap เป็น 2, เพิ่ม flex-1 เพื่อดันให้เต็มจอ และใส่ whitespace-nowrap ที่ปุ่มไม่ให้ตัวหนังสือตกบรรทัด */}
-        <div className="hidden lg:flex flex-1 gap-2 bg-slate-100 p-1.5 rounded-2xl overflow-x-auto hide-scrollbar">
+        <div className="hidden lg:flex flex-1 min-w-0 gap-2 bg-slate-100 p-1.5 rounded-2xl overflow-x-auto hide-scrollbar">
           {navItems.map(t => (
             <button key={t.id} onClick={() => t.href ? window.open(t.href, '_blank', 'noopener,noreferrer') : setActiveTab(t.id)} className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 flex-shrink-0 whitespace-nowrap ${activeTab === t.id ? 'bg-white text-indigo-600 shadow-sm scale-105' : 'text-slate-500 hover:text-indigo-600'}`}>
               <t.i size={16} /> {t.l}
@@ -1712,7 +1711,7 @@ const App = () => {
       <main className="max-w-7xl mx-auto px-4 py-8">
 
         {/* ADMIN TAB */}
-        {activeTab === 'admin' && isDeveloper && (
+        {activeTab === 'admin' && (isDeveloper || currentUserRole === 'admin') && (
           <div className="max-w-6xl mx-auto space-y-6 animate-in fade-in duration-500 font-serif">
             <div className="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm">
               <div className="flex justify-between items-center mb-6">
@@ -2902,7 +2901,7 @@ const App = () => {
                             {(() => {
                               // 1. ดึงงานย่อยทั้งหมดจากพูล (Pool) ของรายวิชานี้
                               const subjectSubTasks = sub.mainTasks?.flatMap(mt => mt.subTasks || []) || [];
-                              
+
                               // 2. กรองเฉพาะงานย่อยที่ถูกนำมาจับคู่ (Mapped) กับงานในสถานประกอบการแล้ว
                               const filteredTasks = subjectSubTasks.filter(st => {
                                 return workplaceTasksFlat.some(wt => {
@@ -3195,9 +3194,9 @@ const App = () => {
         <p className="mt-1">ระบบวิเคราะห์และจัดทำแผนฝึกอาชีพ(ทวิภาคี)</p>
       </footer>
 
-      <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 h-16 flex items-center justify-around z-50 shadow-2xl font-serif px-2 overflow-x-auto overflow-y-hidden whitespace-nowrap hide-scrollbar">
+      <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 h-16 flex items-center justify-start gap-1 z-50 shadow-2xl font-serif px-4 overflow-x-auto overflow-y-hidden whitespace-nowrap hide-scrollbar">
         {navItems.map(nav => (
-          <button key={nav.id} onClick={() => nav.href ? window.open(nav.href, '_blank', 'noopener,noreferrer') : setActiveTab(nav.id)} className={`flex flex-col items-center justify-center gap-1 w-16 flex-shrink-0 h-full px-1 ${activeTab === nav.id ? 'text-indigo-600 border-t-2 border-indigo-600 -mt-[1px]' : 'text-slate-400'}`}>
+          <button key={nav.id} onClick={() => nav.href ? window.open(nav.href, '_blank', 'noopener,noreferrer') : setActiveTab(nav.id)} className={`flex flex-col items-center justify-center gap-1 min-w-[64px] px-2 flex-shrink-0 h-full ${activeTab === nav.id ? 'text-indigo-600 border-t-2 border-indigo-600 -mt-[1px]' : 'text-slate-400'}`}>
             <nav.i size={18} className={activeTab === nav.id ? 'mt-1' : ''} /><span className="text-[9px] font-bold font-serif">{nav.baseLabel}</span>
           </button>
         ))}
