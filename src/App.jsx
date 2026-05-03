@@ -1254,8 +1254,7 @@ const App = () => {
   ].filter(f => !(isWorkplaceTrainer && f.hideForTrainer)); // กรองฟิลด์ที่ไม่ต้องการออกถ้าเป็นครูฝึก
 
   // --- Dynamic Navigation Items (Role Based) ---
-  const isWorkplaceTrainer = currentUserRole === 'ครูฝึกในสถานประกอบการ';
-  
+   
   const navItems = [
     { id: 'setup', baseLabel: 'ตั้งค่า', i: Settings },
     // ซ่อนเมนูวิชาสำหรับครูฝึก (แต่แอดมินและครูเห็น)
