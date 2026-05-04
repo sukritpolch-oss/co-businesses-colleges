@@ -994,9 +994,8 @@ const App = () => {
          - กลุ่มลงมือทำ/ดำเนินการ: ผลิต, ดำเนินการ, ปฏิบัติ, ประกอบ, ติดตั้ง, จัดทำ, จัดเตรียม, เตรียม, ตัด, เย็บ
          - กลุ่มจัดการ/ตรวจสอบ: ตรวจสอบ, สอบทาน, เช็ค, จัดการ, บริหาร, ซ่อมแซม, ซ่อม, แก้ไข, คัดแยก, บรรจุ, ปรับแต่ง, ปรับตั้ง, ปรับ
          - กลุ่มส่งเสริม/ขาย: จำหน่าย, ขาย, ประชาสัมพันธ์, โฆษณา, บริการ, ให้คำปรึกษา
-      3. คืนค่าเป็นรหัสเฉพาะของรายวิชา ตามข้อมูลในพูลงานข้างต้นเท่านั้น (เช่น A1-1, A1-2)
+      3. คืนค่าเป็นรหัสย่อยเฉพาะของรายวิชา ตามข้อมูลในพูลงานข้างต้นเท่านั้น (เช่น A1-1, B2-2) **ห้ามตอบเป็นรหัสงานหลักแบบกว้างๆ (เช่น A1 หรือ B2)**
       4. ห้ามแต่งรหัสขึ้นมาเองโดยเด็ดขาด หากงานในสถานประกอบการไม่สอดคล้องกับพูลงานไหนเลย ให้ส่งค่าว่าง ""`;
-
       const generationConfig = { responseSchema: { type: "OBJECT", properties: { mappings: { type: "ARRAY", items: { type: "OBJECT", properties: { wId: { type: "STRING" }, mappedSubTaskId: { type: "STRING" }, steps: { type: "ARRAY", items: { type: "OBJECT", properties: { stepIdx: { type: "INTEGER" }, mappedStepId: { type: "STRING" } } } } } } } } } };
 
       const result = await callAI({ contents: [{ parts: [{ text: `จับคู่งานดังนี้:\n${JSON.stringify(workplaceDataForAi)}` }] }], systemInstruction: { parts: [{ text: systemPrompt }] }, generationConfig });
@@ -1064,7 +1063,7 @@ const App = () => {
         * ส่งเสริม/ขาย: จำหน่าย, ขาย, ประชาสัมพันธ์, โฆษณา, บริการ, ให้คำปรึกษา
       - หากภาพรวมงานย่อยสอดคล้องกับพูล ให้ระบุรหัสใน \`subjectTaskId\` ของงานย่อย
       - หาก "ขั้นตอนการปฏิบัติงาน (step)" ใด มีลักษณะคล้ายคลึงกับงานใดในพูลวิชา ให้ระบุรหัสนั้นลงใน \`subjectTaskId\` ของขั้นตอนนั้นๆ ทันที
-      - **กฎเหล็กเรื่องรหัส (subjectTaskId)**: ต้องตอบเป็นรูปแบบรหัสสั้นๆ เท่านั้น (เช่น A1-1 หรือ B2-2) ห้ามมีข้อความอื่นปนมาเด็ดขาด` : `2. ไม่มีข้อมูลพูลสมรรถนะ ให้สร้างรหัส Mapping สมมติขึ้นมาเอง`}
+      - **กฎเหล็กเรื่องรหัส (subjectTaskId)**: ต้องตอบเป็นรหัสงานย่อยตามข้อมูลในพูลวิชาเท่านั้น (เช่น A1-1 หรือ B2-2) **ห้ามตอบรหัสงานหลักแบบกว้างๆ (เช่น A1)** ห้ามมีข้อความอื่นปนมาเด็ดขาด` : `2. ไม่มีข้อมูลพูลสมรรถนะ ให้สร้างรหัส Mapping สมมติขึ้นมาเอง`}
       3. กำหนดระดับ (1-3) K,S,A,Ap ตามมาตรฐาน v5.0
       4. การเขียน "จุดประสงค์เชิงพฤติกรรม" (objectives) สำหรับ K, S, A, Ap ต้องใช้ "คำกริยาที่วัดผลได้" ห้ามใช้คำว่า รู้จัก, เข้าใจ, ทราบ, รู้
       5. ชื่องานย่อย/ขั้นตอน ต้องขึ้นต้นด้วยคำกริยา ห้ามมีคำว่า "การ", "ศึกษา", "เรียนรู้", "ทฤษฎี"
@@ -2764,141 +2763,153 @@ const App = () => {
             )}
 
             {/* พื้นที่สำหรับสร้างเอกสาร แบบนิเทศติดตามประเมินผล (ตามรายวิชา) */}
-            {activeEvalView === 'eval_supervision' && ['ครู', 'ผู้บริหาร', 'เจ้าหน้าที่', 'ศึกษานิเทศก์', 'admin'].includes(currentUserRole) && (
+            {activeEvalView === 'eval_supervision' && currentUserRole !== 'ครูฝึกในสถานประกอบการ' && (
               <div id="dve-supervision-area" className="font-serif">
-                {subjects.filter(s => s.isAnalyzed).map(sub => {
-                  // 1. ดึงงานย่อยอย่างปลอดภัย ป้องกันจอขาวจากค่า null
-                  const allSubTasks = (sub.mainTasks || []).flatMap(mt => mt?.subTasks || []);
-                  
-                  // 2. ดึงรหัสที่จับคู่ ทั้งจากงานหลักและงานย่อย (Step) มาประมวลผล
-                  const mappedTasksForThisSubject = allSubTasks.filter(st => {
-                    if (!st || !st.id) return false;
-                    return workplaceTasksFlat.some(wt => {
-                      let allTargetIds = [];
-                      if (wt?.id) allTargetIds.push(...String(wt.id).split(','));
-                      if (wt?.detailed_steps && Array.isArray(wt.detailed_steps)) {
-                        wt.detailed_steps.forEach(step => {
-                          if (step?.subjectTaskId) allTargetIds.push(...String(step.subjectTaskId).split(','));
-                        });
-                      }
-                      const cleanTargetIds = allTargetIds.map(i => String(i).trim().toUpperCase());
-                      return cleanTargetIds.includes(String(st.id).trim().toUpperCase());
-                    });
-                  });
 
-                  let colCount = 4; // checklist
-                  if (evalFormType === '5') colCount = 7;
-                  if (evalFormType === '4') colCount = 6;
-                  if (evalFormType === '3') colCount = 5;
+                {/* 🔴 เพิ่มส่วนแจ้งเตือน: ถ้ายังไม่มีวิชา ให้แสดงกล่องข้อความแทนการปล่อยจอโล่ง */}
+                {subjects.filter(s => s.isAnalyzed).length === 0 ? (
+                  <div className="text-center p-12 bg-amber-50 border-2 border-dashed border-amber-300 rounded-3xl mt-4">
+                    <AlertCircle size={48} className="text-amber-500 mx-auto mb-4" />
+                    <h3 className="text-xl font-bold text-amber-800">ยังไม่พบข้อมูลรายวิชา</h3>
+                    <p className="text-amber-700 mt-2 font-bold">กรุณาไปที่แท็บ "วิเคราะห์รายวิชา" เพื่อทำการวิเคราะห์<br />หรือโหลดไฟล์เซฟงานเดิมก่อน ระบบจึงจะสร้างแบบนิเทศได้ครับ</p>
+                  </div>
+                ) : (
+                  subjects.filter(s => s.isAnalyzed).map(sub => {
+                    // ดึงงานย่อยอย่างปลอดภัย ป้องกันจอขาว
+                    const allSubTasks = (sub.mainTasks || []).flatMap(mt => mt?.subTasks || []);
 
-                  return (
-                    <div key={`supervision-${sub.id}`} className="page-break mb-20 font-serif">
-                      <div className="text-center font-bold mb-6">
-                        <h2 className="text-[18pt] mb-2">แบบนิเทศติดตามประเมินผลการฝึกอาชีพ</h2>
-                        <p className="text-[16pt] font-normal">ระหว่างวิทยาลัย....................................................... กับบริษัท {config.companyName || '.......................................................'}</p>
-                        <p className="text-[16pt] font-normal">รหัสวิชา {sub.code || '.........................'} รายวิชา {sub.name || '..................................................................'}</p>
-                        <p className="text-[16pt] font-normal">ประจำเดือน.......................................................</p>
-                      </div>
+                    const mappedTasksForThisSubject = allSubTasks.filter(st => {
+                      if (!st || !st.id) return false;
+                      return workplaceTasksFlat.some(wt => {
+                        let allTargetIds = [];
+                        if (wt?.id) allTargetIds.push(...String(wt.id).split(','));
+                        if (wt?.detailed_steps && Array.isArray(wt.detailed_steps)) {
+                          wt.detailed_steps.forEach(step => {
+                            if (step?.subjectTaskId) allTargetIds.push(...String(step.subjectTaskId).split(','));
+                          });
+                        }
+                        const cleanTargetIds = allTargetIds.map(i => String(i).trim().toUpperCase());
+                        const stId = String(st.id).trim().toUpperCase();
+                        // เปลี่ยนจาก .includes เป็นการเช็คด้วย .startsWith() ทั้งสองทาง เพื่อให้ยืดหยุ่นขึ้นเมื่อ AI ส่งรหัสไม่ครบ
+                        return cleanTargetIds.some(targetId =>
+                          targetId.startsWith(stId) || stId.startsWith(targetId)
+                        );
+                      }); // <-- เพิ่มปิดวงเล็บของ workplaceTasksFlat.some ตรงนี้
+                    }); // <-- เพิ่มปิดวงเล็บของ allSubTasks.filter ตรงนี้
+                    let colCount = 4;
+                    if (evalFormType === '5') colCount = 7;
+                    if (evalFormType === '4') colCount = 6;
+                    if (evalFormType === '3') colCount = 5;
 
-                      <table style={{ width: '100%', borderCollapse: 'collapse', border: '1px solid black', marginBottom: '15px', fontSize: '14pt' }}>
-                        <tbody>
-                          <tr>
-                            <td style={{ width: '50%', border: '1px solid black', padding: '10px', verticalAlign: 'top', lineHeight: '1.8' }}>
-                              ชื่อ....................................................... นามสกุล...................................................<br />
-                              แผนกวิชา {config.fieldOfStudy || '.............................................'} ระดับชั้น {config.level || '........................'}<br />
-                              ภาคเรียนที่................................... ปีการศึกษา {config.academicYear || '....................................'}<br />
-                              ฝึกอาชีพระหว่างวันที่...................... เดือน............................................. พ.ศ. .........<br />
-                              ถึงวันที่...................... เดือน............................................. พ.ศ. .........<br />
-                            </td>
-                            <td style={{ width: '50%', border: '1px solid black', padding: '10px', verticalAlign: 'top', lineHeight: '1.8' }}>
-                              สถิติการฝึกอาชีพ<br />
-                              ระยะเวลาที่ประเมินตั้งแต่ วันที่........... เดือน................................... พ.ศ. .........<br />
-                              ถึงวันที่........... เดือน................................... พ.ศ. .........<br />
-                              <div className="flex justify-between pr-4 md:pr-12">
-                                <span>(  ) สาย...................ครั้ง</span>
-                                <span>(  ) ขาดงาน...........วัน</span>
-                              </div>
-                              <div className="flex justify-between pr-4 md:pr-12">
-                                <span>(  ) ลาป่วย...........วัน</span>
-                                <span>(  ) ลากิจ...........วัน</span>
-                              </div>
-                              วันที่ประเมิน.....................................................................................
-                            </td>
-                          </tr>
-                        </tbody>
-                      </table>
+                    return (
+                      <div key={`supervision-${sub.id}`} className="page-break mb-20 font-serif">
+                        <div className="text-center font-bold mb-6">
+                          <h2 className="text-[18pt] mb-2">แบบนิเทศติดตามประเมินผลการฝึกอาชีพ</h2>
+                          <p className="text-[16pt] font-normal">ระหว่างวิทยาลัย....................................................... กับบริษัท {config.companyName || '.......................................................'}</p>
+                          <p className="text-[16pt] font-normal">รหัสวิชา {sub.code || '.........................'} รายวิชา {sub.name || '..................................................................'}</p>
+                          <p className="text-[16pt] font-normal">ประจำเดือน.......................................................</p>
+                        </div>
 
-                      <p className="mb-2 font-bold text-[14pt]">คำชี้แจง โปรดทำเครื่องหมาย ✓ลงในช่องที่เห็นว่าตรงกับความเป็นจริงมากที่สุด</p>
-
-                      <table className="w-full text-[12pt] border-collapse border-2 border-black font-serif mb-4">
-                        <thead>
-                          <tr className="bg-slate-100 font-bold text-center">
-                            <th className="border border-black p-2 w-[40%] align-middle text-center">หัวข้อประเมิน (งานย่อย)</th>
-                            {evalFormType === 'checklist' && (
-                              <><th className="border border-black p-2 w-20 align-middle">ทำได้</th><th className="border border-black p-2 w-20 align-middle">ทำไม่ได้</th></>
-                            )}
-                            {evalFormType === '5' && (
-                              <><th className="border border-black p-2 w-12 align-middle">5</th><th className="border border-black p-2 w-12 align-middle">4</th><th className="border border-black p-2 w-12 align-middle">3</th><th className="border border-black p-2 w-12 align-middle">2</th><th className="border border-black p-2 w-12 align-middle">1</th></>
-                            )}
-                            {evalFormType === '4' && (
-                              <><th className="border border-black p-2 w-12 align-middle">4</th><th className="border border-black p-2 w-12 align-middle">3</th><th className="border border-black p-2 w-12 align-middle">2</th><th className="border border-black p-2 w-12 align-middle">1</th></>
-                            )}
-                            {evalFormType === '3' && (
-                              <><th className="border border-black p-2 w-12 align-middle">3</th><th className="border border-black p-2 w-12 align-middle">2</th><th className="border border-black p-2 w-12 align-middle">1</th></>
-                            )}
-                            <th className="border border-black p-2 align-middle">ข้อเสนอแนะ</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          <tr className="bg-slate-50 font-bold"><td colSpan={colCount} className="border border-black p-2 pl-4">ส่วนที่ 1 การปฏิบัติงานย่อย</td></tr>
-                          {mappedTasksForThisSubject.length > 0 ? mappedTasksForThisSubject.map((st, i) => (
-                            <tr key={i} className="align-top">
-                              <td className="border border-black p-2 pl-4 text-left">{st.id} {cleanTaskName(st.name)}</td>
-                              {Array.from({ length: colCount - 2 }).map((_, j) => <td key={j} className="border border-black p-2"></td>)}
-                              <td className="border border-black p-2"></td>
+                        <table style={{ width: '100%', borderCollapse: 'collapse', border: '1px solid black', marginBottom: '15px', fontSize: '14pt' }}>
+                          <tbody>
+                            <tr>
+                              <td style={{ width: '50%', border: '1px solid black', padding: '10px', verticalAlign: 'top', lineHeight: '1.8' }}>
+                                ชื่อ....................................................... นามสกุล...................................................<br />
+                                แผนกวิชา {config.fieldOfStudy || '.............................................'} ระดับชั้น {config.level || '........................'}<br />
+                                ภาคเรียนที่................................... ปีการศึกษา {config.academicYear || '....................................'}<br />
+                                ฝึกอาชีพระหว่างวันที่...................... เดือน............................................. พ.ศ. .........<br />
+                                ถึงวันที่...................... เดือน............................................. พ.ศ. .........<br />
+                              </td>
+                              <td style={{ width: '50%', border: '1px solid black', padding: '10px', verticalAlign: 'top', lineHeight: '1.8' }}>
+                                สถิติการฝึกอาชีพ<br />
+                                ระยะเวลาที่ประเมินตั้งแต่ วันที่........... เดือน................................... พ.ศ. .........<br />
+                                ถึงวันที่........... เดือน................................... พ.ศ. .........<br />
+                                <div className="flex justify-between pr-4 md:pr-12">
+                                  <span>(  ) สาย...................ครั้ง</span>
+                                  <span>(  ) ขาดงาน...........วัน</span>
+                                </div>
+                                <div className="flex justify-between pr-4 md:pr-12">
+                                  <span>(  ) ลาป่วย...........วัน</span>
+                                  <span>(  ) ลากิจ...........วัน</span>
+                                </div>
+                                วันที่ประเมิน.....................................................................................
+                              </td>
                             </tr>
-                          )) : (
-                            <tr><td colSpan={colCount} className="border border-black p-2 text-center text-slate-400">ไม่มีงานย่อยที่สอดคล้องกับสถานประกอบการ</td></tr>
-                          )}
+                          </tbody>
+                        </table>
 
-                          {selectedBehaviors.length > 0 && (
-                            <React.Fragment>
-                              <tr className="bg-slate-50 font-bold"><td colSpan={colCount} className="border border-black p-2 pl-4">ส่วนที่ 2 ด้านกิจนิสัย</td></tr>
-                              {selectedBehaviors.map((beh, i) => (
-                                <tr key={`beh-${i}`} className="align-top">
-                                  <td className="border border-black p-2 pl-4 text-left">{i + 1}. {beh}</td>
-                                  {Array.from({ length: colCount - 2 }).map((_, j) => <td key={j} className="border border-black p-2"></td>)}
-                                  <td className="border border-black p-2"></td>
-                                </tr>
-                              ))}
-                            </React.Fragment>
-                          )}
-                        </tbody>
-                      </table>
+                        <p className="mb-2 font-bold text-[14pt]">คำชี้แจง โปรดทำเครื่องหมาย ✓ลงในช่องที่เห็นว่าตรงกับความเป็นจริงมากที่สุด</p>
 
-                      <div className="mb-6 text-[12pt] leading-relaxed">
-                        <b>เกณฑ์การให้คะแนน (Rubric):</b><br />
-                        {evalFormType === '5' && "5 = ปฏิบัติได้ดีมาก/ถูกต้องสมบูรณ์, 4 = ปฏิบัติได้ดี/มีข้อผิดพลาดเล็กน้อย, 3 = ปฏิบัติได้ปานกลาง/ต้องได้รับคำแนะนำบ้าง, 2 = ปฏิบัติได้พอใช้/ต้องคอยกำกับดูแล, 1 = ต้องปรับปรุง/ไม่สามารถปฏิบัติได้"}
-                        {evalFormType === '4' && "4 = ปฏิบัติได้ดีมาก/ถูกต้องสมบูรณ์, 3 = ปฏิบัติได้ดี/มีข้อผิดพลาดเล็กน้อย, 2 = ปฏิบัติได้พอใช้/ต้องคอยกำกับดูแล, 1 = ต้องปรับปรุง/ไม่สามารถปฏิบัติได้"}
-                        {evalFormType === '3' && "3 = ปฏิบัติได้ดี/ถูกต้องสมบูรณ์, 2 = ปฏิบัติได้พอใช้/ต้องคอยกำกับดูแล, 1 = ต้องปรับปรุง/ไม่สามารถปฏิบัติได้"}
-                        {evalFormType === 'checklist' && "ทำได้ = สามารถปฏิบัติงานได้ตามจุดประสงค์การประเมิน, ทำไม่ได้ = ไม่สามารถปฏิบัติงานได้ตามจุดประสงค์การประเมิน"}
-                      </div>
+                        <table className="w-full text-[12pt] border-collapse border-2 border-black font-serif mb-4">
+                          <thead>
+                            <tr className="bg-slate-100 font-bold text-center">
+                              <th className="border border-black p-2 w-[40%] align-middle text-center">หัวข้อประเมิน (งานย่อย)</th>
+                              {evalFormType === 'checklist' && (
+                                <><th className="border border-black p-2 w-20 align-middle">ทำได้</th><th className="border border-black p-2 w-20 align-middle">ทำไม่ได้</th></>
+                              )}
+                              {evalFormType === '5' && (
+                                <><th className="border border-black p-2 w-12 align-middle">5</th><th className="border border-black p-2 w-12 align-middle">4</th><th className="border border-black p-2 w-12 align-middle">3</th><th className="border border-black p-2 w-12 align-middle">2</th><th className="border border-black p-2 w-12 align-middle">1</th></>
+                              )}
+                              {evalFormType === '4' && (
+                                <><th className="border border-black p-2 w-12 align-middle">4</th><th className="border border-black p-2 w-12 align-middle">3</th><th className="border border-black p-2 w-12 align-middle">2</th><th className="border border-black p-2 w-12 align-middle">1</th></>
+                              )}
+                              {evalFormType === '3' && (
+                                <><th className="border border-black p-2 w-12 align-middle">3</th><th className="border border-black p-2 w-12 align-middle">2</th><th className="border border-black p-2 w-12 align-middle">1</th></>
+                              )}
+                              <th className="border border-black p-2 align-middle">ข้อเสนอแนะ</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            <tr className="bg-slate-50 font-bold"><td colSpan={colCount} className="border border-black p-2 pl-4">ส่วนที่ 1 การปฏิบัติงานย่อย</td></tr>
+                            {mappedTasksForThisSubject.length > 0 ? mappedTasksForThisSubject.map((st, i) => (
+                              <tr key={i} className="align-top">
+                                <td className="border border-black p-2 pl-4 text-left">{st.id} {cleanTaskName(st.name)}</td>
+                                {Array.from({ length: colCount - 2 }).map((_, j) => <td key={j} className="border border-black p-2"></td>)}
+                                <td className="border border-black p-2"></td>
+                              </tr>
+                            )) : (
+                              <tr><td colSpan={colCount} className="border border-black p-2 text-center text-slate-400">ไม่มีงานย่อยที่สอดคล้องกับสถานประกอบการ</td></tr>
+                            )}
 
-                      <div className="flex justify-between mt-12 text-[14pt] px-10">
-                        <div className="text-center">
-                          <p className="mb-6">ลงชื่อ..................................................................</p>
-                          <p>(..............................................................)</p>
-                          <p>ผู้รับการประเมิน</p>
+                            {selectedBehaviors.length > 0 && (
+                              <React.Fragment>
+                                <tr className="bg-slate-50 font-bold"><td colSpan={colCount} className="border border-black p-2 pl-4">ส่วนที่ 2 ด้านกิจนิสัย</td></tr>
+                                {selectedBehaviors.map((beh, i) => (
+                                  <tr key={`beh-${i}`} className="align-top">
+                                    <td className="border border-black p-2 pl-4 text-left">{i + 1}. {beh}</td>
+                                    {Array.from({ length: colCount - 2 }).map((_, j) => <td key={j} className="border border-black p-2"></td>)}
+                                    <td className="border border-black p-2"></td>
+                                  </tr>
+                                ))}
+                              </React.Fragment>
+                            )}
+                          </tbody>
+                        </table>
+
+                        <div className="mb-6 text-[12pt] leading-relaxed">
+                          <b>เกณฑ์การให้คะแนน (Rubric):</b><br />
+                          {evalFormType === '5' && "5 = ปฏิบัติได้ดีมาก/ถูกต้องสมบูรณ์, 4 = ปฏิบัติได้ดี/มีข้อผิดพลาดเล็กน้อย, 3 = ปฏิบัติได้ปานกลาง/ต้องได้รับคำแนะนำบ้าง, 2 = ปฏิบัติได้พอใช้/ต้องคอยกำกับดูแล, 1 = ต้องปรับปรุง/ไม่สามารถปฏิบัติได้"}
+                          {evalFormType === '4' && "4 = ปฏิบัติได้ดีมาก/ถูกต้องสมบูรณ์, 3 = ปฏิบัติได้ดี/มีข้อผิดพลาดเล็กน้อย, 2 = ปฏิบัติได้พอใช้/ต้องคอยกำกับดูแล, 1 = ต้องปรับปรุง/ไม่สามารถปฏิบัติได้"}
+                          {evalFormType === '3' && "3 = ปฏิบัติได้ดี/ถูกต้องสมบูรณ์, 2 = ปฏิบัติได้พอใช้/ต้องคอยกำกับดูแล, 1 = ต้องปรับปรุง/ไม่สามารถปฏิบัติได้"}
+                          {evalFormType === 'checklist' && "ทำได้ = สามารถปฏิบัติงานได้ตามจุดประสงค์การประเมิน, ทำไม่ได้ = ไม่สามารถปฏิบัติงานได้ตามจุดประสงค์การประเมิน"}
                         </div>
-                        <div className="text-center">
-                          <p className="mb-6">ลงชื่อ..................................................................</p>
-                          <p>({config.trainerName || '..............................................................'})</p>
-                          <p>ผู้ประเมิน</p>
+
+                        <div className="flex justify-between mt-12 text-[14pt] px-10">
+                          <div className="text-center">
+                            <p className="mb-6">ลงชื่อ..................................................................</p>
+                            <p>(..............................................................)</p>
+                            <p>ผู้รับการประเมิน</p>
+                          </div>
+                          <div className="text-center">
+                            <p className="mb-6">ลงชื่อ..................................................................</p>
+                            <p>({config.trainerName || '..............................................................'})</p>
+                            <p>ผู้ประเมิน</p>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  );
-                })}
+                    );
+                  })
+                )}
               </div>
             )}
 
