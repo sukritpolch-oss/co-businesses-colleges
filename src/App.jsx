@@ -240,12 +240,7 @@ const App = () => {
       setShowWelcomeModal(true);
       return showStatus('ยินดีต้อนรับเข้าสู่ระบบผู้ดูแล (Admin Panel)');
     }
-    if (authData.email.toLowerCase() === ADMIN_EMAIL.toLowerCase() && authData.password === ADMIN_PASSWORD) {
-      setIsAuthenticated(true); setIsDeveloper(true); setLoginError(''); setCurrentUserEmail(authData.email); setCurrentUserRole('admin');
-      setShowWelcomeModal(true);
-      return showStatus('ยินดีต้อนรับเข้าสู่ระบบผู้ดูแล (Admin Panel)');
-    }
-
+    
     if (isLoadingData) return setLoginError('ระบบกำลังโหลดฐานข้อมูล กรุณารอสักครู่...');
 
     const inputEmail = String(authData.email || '').trim().toLowerCase();
@@ -1253,9 +1248,9 @@ const App = () => {
     { k: 'department', l: 'ส่วนงาน / จุดฝึก', i: Building2 }
   ].filter(f => !(isWorkplaceTrainer && f.hideForTrainer)); // กรองฟิลด์ที่ไม่ต้องการออกถ้าเป็นครูฝึก
 
- // --- Dynamic Navigation Items (Role Based) ---
+  // --- Dynamic Navigation Items (Role Based) ---
   const isAdminUser = isDeveloper || currentUserRole === 'admin' || currentUserEmail.toLowerCase() === 'sukritpol.ch@gmail.com';
-  
+
   const navItems = [
     { id: 'setup', baseLabel: 'ตั้งค่า', i: Settings },
     ...(!isWorkplaceTrainer ? [
@@ -1509,7 +1504,7 @@ const App = () => {
         {(isDeveloper || currentUserRole === 'admin') && <span className="bg-red-500 text-white text-[9px] px-2 py-0.5 rounded-full flex items-center gap-1 animate-pulse shrink-0 ml-2"><Code size={10} /> DEV/ADMIN MODE</span>}      </div>
 
       <header className="bg-white border-b border-slate-200 sticky top-0 z-50 min-h-[64px] py-2 flex items-center justify-between px-2 md:px-4 shadow-sm overflow-visible gap-4">
-        
+
         <div className="hidden lg:flex flex-1 gap-2 bg-slate-100 p-1.5 rounded-2xl flex-wrap">
           {navItems.map(t => (
             <button key={t.id} onClick={() => t.href ? window.open(t.href, '_blank', 'noopener,noreferrer') : setActiveTab(t.id)} className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 flex-shrink-0 whitespace-nowrap ${activeTab === t.id ? 'bg-white text-indigo-600 shadow-sm scale-105' : 'text-slate-500 hover:text-indigo-600'}`}>
@@ -2511,7 +2506,7 @@ const App = () => {
               <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-8 border-b pb-4 gap-4 font-serif">
                 <h3 className="text-xl font-black text-indigo-700 uppercase font-serif tracking-widest flex items-center gap-3"><ClipboardCheck /> แบบประเมินและสรุปผล</h3>
                 <div className="flex flex-wrap sm:flex-row gap-2 w-full lg:w-auto">
-                  {/* ปุ่มที่ 1: แสดงให้ทั้งคู่เห็น หรือถ้าต้องการซ่อนจากครูตามสั่ง ให้ใส่ !isWorkplaceTrainer ครอบได้ครับ */}
+                  {/* ปุ่มที่ 1: ประเมินปฏิบัติงานย่อย (เห็นทุกคน) */}
                   <button
                     onClick={() => setActiveEvalView('eval_workplace')}
                     className={`px-4 py-2.5 rounded-2xl text-xs font-bold shadow-sm flex items-center gap-2 transition-all whitespace-nowrap ${activeEvalView === 'eval_workplace' ? 'bg-blue-600 text-white' : 'bg-white text-blue-600 border border-blue-200 hover:bg-blue-50'}`}
@@ -2519,428 +2514,435 @@ const App = () => {
                     <FileText size={16} /> 1. ประเมินปฏิบัติงาน (ย่อย)
                   </button>
 
-                  {/* [MODIFIED] ส่วนของครูวิทยาลัย: ซ่อน "แบบนิเทศ" และแสดงเฉพาะ "สรุปผลการเรียนรู้รายวิชา" */}
-                  {!isWorkplaceTrainer && (
+                  {/* ปุ่มที่ 2: แบบนิเทศ (ซ่อนเฉพาะครูฝึกในสถานประกอบการ) */}
+                  {currentUserRole !== 'ครูฝึกในสถานประกอบการ' && (
+                    <button
+                      onClick={() => setActiveEvalView('eval_supervision')}
+                      className={`px-4 py-2.5 rounded-2xl text-xs font-bold shadow-sm flex items-center gap-2 transition-all whitespace-nowrap ${activeEvalView === 'eval_supervision' ? 'bg-indigo-600 text-white' : 'bg-white text-indigo-600 border border-indigo-200 hover:bg-indigo-50'}`}
+                    >
+                      <FileText size={16} /> 2. แบบนิเทศติดตาม (รายวิชา)
+                    </button>
+                  )}
+
+                  {/* ปุ่มที่ 3: สรุปผลการเรียนรู้ (ซ่อนเฉพาะครูฝึกในสถานประกอบการ) */}
+                  {currentUserRole !== 'ครูฝึกในสถานประกอบการ' && (
                     <button
                       onClick={() => setActiveEvalView('dve1102')}
                       className={`px-4 py-2.5 rounded-2xl text-xs font-bold shadow-sm flex items-center gap-2 transition-all whitespace-nowrap ${activeEvalView === 'dve1102' ? 'bg-amber-500 text-white' : 'bg-white text-amber-600 border border-amber-200 hover:bg-amber-50'}`}
                     >
-                      <FileText size={16} /> 2. สรุปผลการเรียนรู้ (แยกตามรายวิชา)
+                      <FileText size={16} /> 3. สรุปผลการเรียนรู้รายวิชา
                     </button>
                   )}
 
                   <div className="hidden sm:block border-l border-slate-200 mx-1"></div>
 
-                  <button
-                    onClick={() => setShowDownloadConfirm(activeEvalView)}
-                    className="bg-green-600 text-white px-6 py-2.5 rounded-2xl text-xs font-bold hover:bg-green-700 shadow-md active:scale-95 flex items-center gap-2 transition-all whitespace-nowrap"
-                  >
-                    <FileDown size={18} /> ดาวน์โหลดเอกสารนี้
-                  </button>
+                  {/* ส่วน Switch สำหรับ Admin (ปรากฏเมื่อเป็น Admin และอยู่ในหน้าประเมินย่อยหรือนิเทศ) */}
+                  {isDeveloper && (activeEvalView === 'eval_workplace' || activeEvalView === 'eval_supervision') && (
+                    <div className="flex bg-slate-100 p-1 rounded-xl border border-slate-200">
+                      <button
+                        onClick={() => setCurrentUserRole('ครู')}
+                        className={`px-3 py-1.5 rounded-lg text-[10px] font-black transition-all ${currentUserRole !== 'ครูฝึกในสถานประกอบการ' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-400'}`}
+                      >
+                        มุมมองครูนิเทศก์
+                      </button>
+                      <button
+                        onClick={() => setCurrentUserRole('ครูฝึกในสถานประกอบการ')}
+                        className={`px-3 py-1.5 rounded-lg text-[10px] font-black transition-all ${currentUserRole === 'ครูฝึกในสถานประกอบการ' ? 'bg-white text-orange-600 shadow-sm' : 'text-slate-400'}`}
+                      >
+                        มุมมองครูฝึก
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                <div className="hidden sm:block border-l border-slate-200 mx-1"></div>
+
+                <button
+                  onClick={() => setShowDownloadConfirm(activeEvalView)}
+                  className="bg-green-600 text-white px-6 py-2.5 rounded-2xl text-xs font-bold hover:bg-green-700 shadow-md active:scale-95 flex items-center gap-2 transition-all whitespace-nowrap"
+                >
+                  <FileDown size={18} /> ดาวน์โหลดเอกสารนี้
+                </button>
+              </div>
+            </div>
+
+            {/* การตั้งค่าแบบประเมิน */}
+            <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100 mb-8">
+              <h4 className="text-sm font-bold text-slate-700 mb-4 border-b pb-2">ตั้งค่ารูปแบบการประเมินติดตาม</h4>
+              <div className="flex flex-col md:flex-row gap-6">
+                <div className="md:w-1/3">
+                  <label className="text-xs font-bold text-slate-500 block mb-2">เลือกรูปแบบมาตราส่วน (Rating Scale)</label>
+                  <div className="space-y-2">
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input type="radio" name="evalType" checked={evalFormType === 'checklist'} onChange={() => setEvalFormType('checklist')} className="text-indigo-600 focus:ring-indigo-500" />
+                      <span className="text-sm">แบบเช็คลิสต์ (ทำได้ / ทำไม่ได้)</span>
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input type="radio" name="evalType" checked={evalFormType === '5'} onChange={() => setEvalFormType('5')} className="text-indigo-600 focus:ring-indigo-500" />
+                      <span className="text-sm">แบบประเมิน 5 ระดับ</span>
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input type="radio" name="evalType" checked={evalFormType === '4'} onChange={() => setEvalFormType('4')} className="text-indigo-600 focus:ring-indigo-500" />
+                      <span className="text-sm">แบบประเมิน 4 ระดับ</span>
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input type="radio" name="evalType" checked={evalFormType === '3'} onChange={() => setEvalFormType('3')} className="text-indigo-600 focus:ring-indigo-500" />
+                      <span className="text-sm">แบบประเมิน 3 ระดับ</span>
+                    </label>
+                  </div>
+                </div>
+                <div className="md:w-2/3">
+                  <label className="text-xs font-bold text-slate-500 block mb-2">เลือกรายการประเมิน ด้านกิจนิสัย</label>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                    {BEHAVIOR_OPTIONS.map(beh => (
+                      <label key={beh} className="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" checked={selectedBehaviors.includes(beh)} onChange={() => handleBehaviorToggle(beh)} className="text-indigo-600 rounded border-slate-300 focus:ring-indigo-500" />
+                        <span className="text-[11px] text-slate-700">{beh}</span>
+                      </label>
+                    ))}
+                  </div>
                 </div>
               </div>
+            </div>
 
-              {/* การตั้งค่าแบบประเมิน */}
-              <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100 mb-8">
-                <h4 className="text-sm font-bold text-slate-700 mb-4 border-b pb-2">ตั้งค่ารูปแบบการประเมินติดตาม</h4>
-                <div className="flex flex-col md:flex-row gap-6">
-                  <div className="md:w-1/3">
-                    <label className="text-xs font-bold text-slate-500 block mb-2">เลือกรูปแบบมาตราส่วน (Rating Scale)</label>
-                    <div className="space-y-2">
-                      <label className="flex items-center gap-2 cursor-pointer">
-                        <input type="radio" name="evalType" checked={evalFormType === 'checklist'} onChange={() => setEvalFormType('checklist')} className="text-indigo-600 focus:ring-indigo-500" />
-                        <span className="text-sm">แบบเช็คลิสต์ (ทำได้ / ทำไม่ได้)</span>
-                      </label>
-                      <label className="flex items-center gap-2 cursor-pointer">
-                        <input type="radio" name="evalType" checked={evalFormType === '5'} onChange={() => setEvalFormType('5')} className="text-indigo-600 focus:ring-indigo-500" />
-                        <span className="text-sm">แบบประเมิน 5 ระดับ</span>
-                      </label>
-                      <label className="flex items-center gap-2 cursor-pointer">
-                        <input type="radio" name="evalType" checked={evalFormType === '4'} onChange={() => setEvalFormType('4')} className="text-indigo-600 focus:ring-indigo-500" />
-                        <span className="text-sm">แบบประเมิน 4 ระดับ</span>
-                      </label>
-                      <label className="flex items-center gap-2 cursor-pointer">
-                        <input type="radio" name="evalType" checked={evalFormType === '3'} onChange={() => setEvalFormType('3')} className="text-indigo-600 focus:ring-indigo-500" />
-                        <span className="text-sm">แบบประเมิน 3 ระดับ</span>
-                      </label>
-                    </div>
-                  </div>
-                  <div className="md:w-2/3">
-                    <label className="text-xs font-bold text-slate-500 block mb-2">เลือกรายการประเมิน ด้านกิจนิสัย</label>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                      {BEHAVIOR_OPTIONS.map(beh => (
-                        <label key={beh} className="flex items-center gap-2 cursor-pointer">
-                          <input type="checkbox" checked={selectedBehaviors.includes(beh)} onChange={() => handleBehaviorToggle(beh)} className="text-indigo-600 rounded border-slate-300 focus:ring-indigo-500" />
-                          <span className="text-[11px] text-slate-700">{beh}</span>
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </div>
+            {/* พื้นที่สำหรับสร้างเอกสาร แบบประเมินปฏิบัติงาน (รายงานย่อย ขั้นตอนการปฏิบัติงาน) */}
+            {activeEvalView === 'eval_workplace' && (
+              <div id="dve-eval-workplace-area" className="font-serif">
+                {workplaceTasksFlat.map((task, idx) => {
+                  let colCount = 4;
+                  if (evalFormType === '5') colCount = 7;
+                  if (evalFormType === '4') colCount = 6;
+                  if (evalFormType === '3') colCount = 5;
 
-              {/* พื้นที่สำหรับสร้างเอกสาร แบบประเมินปฏิบัติงาน (รายงานย่อย ขั้นตอนการปฏิบัติงาน) */}
-              {activeEvalView === 'eval_workplace' && (
-                <div id="dve-eval-workplace-area" className="font-serif">
-                  {workplaceTasksFlat.map((task, idx) => {
-                    let colCount = 4;
-                    if (evalFormType === '5') colCount = 7;
-                    if (evalFormType === '4') colCount = 6;
-                    if (evalFormType === '3') colCount = 5;
+                  return (
+                    <div key={`eval-wp-${idx}`} className="page-break mb-20 font-serif">
+                      <div className="text-right text-[10pt] mb-2 font-bold italic font-serif border-2 border-black p-1 w-fit ml-auto">แบบประเมินปฏิบัติงาน</div>
+                      <div className="text-center font-bold mb-6">
+                        <h2 className="text-[18pt] uppercase mb-2">แบบประเมินการปฏิบัติงานในสถานประกอบการ</h2>
+                      </div>
 
-                    return (
-                      <div key={`eval-wp-${idx}`} className="page-break mb-20 font-serif">
-                        <div className="text-right text-[10pt] mb-2 font-bold italic font-serif border-2 border-black p-1 w-fit ml-auto">แบบประเมินปฏิบัติงาน</div>
-                        <div className="text-center font-bold mb-6">
-                          <h2 className="text-[18pt] uppercase mb-2">แบบประเมินการปฏิบัติงานในสถานประกอบการ</h2>
-                        </div>
+                      <div className="text-[14pt] mb-6 space-y-1">
+                        <p><b>ชื่อนักเรียน:</b> .................................................................... <b>สาขา:</b> {config.major || '....................................................................'}</p>
+                        <p><b>สถานประกอบการ:</b> {config.companyName || '....................................................................'} <b>อาชีพที่ฝึก:</b> {config.occupation || '....................................................................'}</p>
+                        <p><b>งานหลัก:</b> {task.mainTaskIndex}. {cleanTaskName(task.parentMainTaskName) || '........................................................................................'}</p>
+                        <p><b>งานย่อยที่ปฏิบัติ:</b> {task.subTaskIndex}. {cleanTaskName(task.workplaceName) || '........................................................................................'}</p>
+                      </div>
 
-                        <div className="text-[14pt] mb-6 space-y-1">
-                          <p><b>ชื่อนักเรียน:</b> .................................................................... <b>สาขา:</b> {config.major || '....................................................................'}</p>
-                          <p><b>สถานประกอบการ:</b> {config.companyName || '....................................................................'} <b>อาชีพที่ฝึก:</b> {config.occupation || '....................................................................'}</p>
-                          <p><b>งานหลัก:</b> {task.mainTaskIndex}. {cleanTaskName(task.parentMainTaskName) || '........................................................................................'}</p>
-                          <p><b>งานย่อยที่ปฏิบัติ:</b> {task.subTaskIndex}. {cleanTaskName(task.workplaceName) || '........................................................................................'}</p>
-                        </div>
+                      <p className="mb-2 font-bold text-[14pt]">คำชี้แจง โปรดทำเครื่องหมาย ✓ลงในช่องที่เห็นว่าตรงกับความเป็นจริงมากที่สุด</p>
 
-                        <p className="mb-2 font-bold text-[14pt]">คำชี้แจง โปรดทำเครื่องหมาย ✓ลงในช่องที่เห็นว่าตรงกับความเป็นจริงมากที่สุด</p>
-
-                        <table className="w-full text-[12pt] border-collapse border-2 border-black font-serif mb-4">
-                          <thead>
-                            <tr className="bg-slate-100 font-bold text-center">
-                              <th className="border border-black p-2 w-[40%] align-middle text-center">หัวข้อประเมิน (งานย่อย)</th>
-                              {evalFormType === 'checklist' && (
-                                <>
-                                  <th className="border border-black p-2 w-20 align-middle">ทำได้</th>
-                                  <th className="border border-black p-2 w-20 align-middle">ทำไม่ได้</th>
-                                </>
-                              )}
-                              {evalFormType === '5' && (
-                                <>
-                                  <th className="border border-black p-2 w-12 align-middle">5</th>
-                                  <th className="border border-black p-2 w-12 align-middle">4</th>
-                                  <th className="border border-black p-2 w-12 align-middle">3</th>
-                                  <th className="border border-black p-2 w-12 align-middle">2</th>
-                                  <th className="border border-black p-2 w-12 align-middle">1</th>
-                                </>
-                              )}
-                              {evalFormType === '4' && (
-                                <>
-                                  <th className="border border-black p-2 w-12 align-middle">4</th>
-                                  <th className="border border-black p-2 w-12 align-middle">3</th>
-                                  <th className="border border-black p-2 w-12 align-middle">2</th>
-                                  <th className="border border-black p-2 w-12 align-middle">1</th>
-                                </>
-                              )}
-                              {evalFormType === '3' && (
-                                <>
-                                  <th className="border border-black p-2 w-12 align-middle">3</th>
-                                  <th className="border border-black p-2 w-12 align-middle">2</th>
-                                  <th className="border border-black p-2 w-12 align-middle">1</th>
-                                </>
-                              )}
-                              <th className="border border-black p-2 align-middle">ข้อเสนอแนะ</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            <tr className="bg-slate-50 font-bold">
-                              <td colSpan={colCount} className="border border-black p-2 pl-4">ส่วนที่ 1 การปฏิบัติงานย่อย</td>
-                            </tr>
-                            {task.detailed_steps?.length > 0 ? task.detailed_steps.map((step, i) => (
-                              <tr key={i} className="align-top">
-                                <td className="border border-black p-2 pl-4 text-left">{task.subTaskIndex}.{i + 1} {step.step_text}</td>
-                                {Array.from({ length: colCount - 2 }).map((_, j) => <td key={j} className="border border-black p-2"></td>)}
-                                <td className="border border-black p-2"></td>
-                              </tr>
-                            )) : (
-                              <tr>
-                                <td colSpan={colCount} className="border border-black p-2 text-center text-slate-400">ไม่มีขั้นตอนการปฏิบัติงาน</td>
-                              </tr>
+                      <table className="w-full text-[12pt] border-collapse border-2 border-black font-serif mb-4">
+                        <thead>
+                          <tr className="bg-slate-100 font-bold text-center">
+                            <th className="border border-black p-2 w-[40%] align-middle text-center">หัวข้อประเมิน (งานย่อย)</th>
+                            {evalFormType === 'checklist' && (
+                              <>
+                                <th className="border border-black p-2 w-20 align-middle">ทำได้</th>
+                                <th className="border border-black p-2 w-20 align-middle">ทำไม่ได้</th>
+                              </>
                             )}
+                            {evalFormType === '5' && (
+                              <>
+                                <th className="border border-black p-2 w-12 align-middle">5</th>
+                                <th className="border border-black p-2 w-12 align-middle">4</th>
+                                <th className="border border-black p-2 w-12 align-middle">3</th>
+                                <th className="border border-black p-2 w-12 align-middle">2</th>
+                                <th className="border border-black p-2 w-12 align-middle">1</th>
+                              </>
+                            )}
+                            {evalFormType === '4' && (
+                              <>
+                                <th className="border border-black p-2 w-12 align-middle">4</th>
+                                <th className="border border-black p-2 w-12 align-middle">3</th>
+                                <th className="border border-black p-2 w-12 align-middle">2</th>
+                                <th className="border border-black p-2 w-12 align-middle">1</th>
+                              </>
+                            )}
+                            {evalFormType === '3' && (
+                              <>
+                                <th className="border border-black p-2 w-12 align-middle">3</th>
+                                <th className="border border-black p-2 w-12 align-middle">2</th>
+                                <th className="border border-black p-2 w-12 align-middle">1</th>
+                              </>
+                            )}
+                            <th className="border border-black p-2 align-middle">ข้อเสนอแนะ</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr className="bg-slate-50 font-bold">
+                            <td colSpan={colCount} className="border border-black p-2 pl-4">ส่วนที่ 1 การปฏิบัติงานย่อย</td>
+                          </tr>
+                          {task.detailed_steps?.length > 0 ? task.detailed_steps.map((step, i) => (
+                            <tr key={i} className="align-top">
+                              <td className="border border-black p-2 pl-4 text-left">{task.subTaskIndex}.{i + 1} {step.step_text}</td>
+                              {Array.from({ length: colCount - 2 }).map((_, j) => <td key={j} className="border border-black p-2"></td>)}
+                              <td className="border border-black p-2"></td>
+                            </tr>
+                          )) : (
+                            <tr>
+                              <td colSpan={colCount} className="border border-black p-2 text-center text-slate-400">ไม่มีขั้นตอนการปฏิบัติงาน</td>
+                            </tr>
+                          )}
 
-                            {selectedBehaviors.length > 0 && (
-                              <React.Fragment>
-                                <tr className="bg-slate-50 font-bold">
-                                  <td colSpan={colCount} className="border border-black p-2 pl-4">ส่วนที่ 2 ด้านกิจนิสัย</td>
+                          {selectedBehaviors.length > 0 && (
+                            <React.Fragment>
+                              <tr className="bg-slate-50 font-bold">
+                                <td colSpan={colCount} className="border border-black p-2 pl-4">ส่วนที่ 2 ด้านกิจนิสัย</td>
+                              </tr>
+                              {selectedBehaviors.map((beh, i) => (
+                                <tr key={`beh-${i}`} className="align-top">
+                                  <td className="border border-black p-2 pl-4 text-left">{i + 1}. {beh}</td>
+                                  {Array.from({ length: colCount - 2 }).map((_, j) => <td key={j} className="border border-black p-2"></td>)}
+                                  <td className="border border-black p-2"></td>
                                 </tr>
-                                {selectedBehaviors.map((beh, i) => (
-                                  <tr key={`beh-${i}`} className="align-top">
-                                    <td className="border border-black p-2 pl-4 text-left">{i + 1}. {beh}</td>
-                                    {Array.from({ length: colCount - 2 }).map((_, j) => <td key={j} className="border border-black p-2"></td>)}
-                                    <td className="border border-black p-2"></td>
-                                  </tr>
-                                ))}
-                              </React.Fragment>
-                            )}
-                          </tbody>
-                        </table>
+                              ))}
+                            </React.Fragment>
+                          )}
+                        </tbody>
+                      </table>
 
-                        <div className="mb-6 text-[12pt] leading-relaxed">
-                          <b>เกณฑ์การให้คะแนน (Rubric):</b><br />
-                          {evalFormType === '5' && "5 = ปฏิบัติได้ดีมาก/ถูกต้องสมบูรณ์, 4 = ปฏิบัติได้ดี/มีข้อผิดพลาดเล็กน้อย, 3 = ปฏิบัติได้ปานกลาง/ต้องได้รับคำแนะนำบ้าง, 2 = ปฏิบัติได้พอใช้/ต้องคอยกำกับดูแล, 1 = ต้องปรับปรุง/ไม่สามารถปฏิบัติได้"}
-                          {evalFormType === '4' && "4 = ปฏิบัติได้ดีมาก/ถูกต้องสมบูรณ์, 3 = ปฏิบัติได้ดี/มีข้อผิดพลาดเล็กน้อย, 2 = ปฏิบัติได้พอใช้/ต้องคอยกำกับดูแล, 1 = ต้องปรับปรุง/ไม่สามารถปฏิบัติได้"}
-                          {evalFormType === '3' && "3 = ปฏิบัติได้ดี/ถูกต้องสมบูรณ์, 2 = ปฏิบัติได้พอใช้/ต้องคอยกำกับดูแล, 1 = ต้องปรับปรุง/ไม่สามารถปฏิบัติได้"}
-                          {evalFormType === 'checklist' && "ทำได้ = สามารถปฏิบัติงานได้ตามจุดประสงค์การประเมิน, ทำไม่ได้ = ไม่สามารถปฏิบัติงานได้ตามจุดประสงค์การประเมิน"}
+                      <div className="mb-6 text-[12pt] leading-relaxed">
+                        <b>เกณฑ์การให้คะแนน (Rubric):</b><br />
+                        {evalFormType === '5' && "5 = ปฏิบัติได้ดีมาก/ถูกต้องสมบูรณ์, 4 = ปฏิบัติได้ดี/มีข้อผิดพลาดเล็กน้อย, 3 = ปฏิบัติได้ปานกลาง/ต้องได้รับคำแนะนำบ้าง, 2 = ปฏิบัติได้พอใช้/ต้องคอยกำกับดูแล, 1 = ต้องปรับปรุง/ไม่สามารถปฏิบัติได้"}
+                        {evalFormType === '4' && "4 = ปฏิบัติได้ดีมาก/ถูกต้องสมบูรณ์, 3 = ปฏิบัติได้ดี/มีข้อผิดพลาดเล็กน้อย, 2 = ปฏิบัติได้พอใช้/ต้องคอยกำกับดูแล, 1 = ต้องปรับปรุง/ไม่สามารถปฏิบัติได้"}
+                        {evalFormType === '3' && "3 = ปฏิบัติได้ดี/ถูกต้องสมบูรณ์, 2 = ปฏิบัติได้พอใช้/ต้องคอยกำกับดูแล, 1 = ต้องปรับปรุง/ไม่สามารถปฏิบัติได้"}
+                        {evalFormType === 'checklist' && "ทำได้ = สามารถปฏิบัติงานได้ตามจุดประสงค์การประเมิน, ทำไม่ได้ = ไม่สามารถปฏิบัติงานได้ตามจุดประสงค์การประเมิน"}
+                      </div>
+
+                      <div className="mb-8 text-[14pt]">
+                        <p>ความคิดเห็นเพิ่มเติม/ข้อเสนอแนะ..........................................................................................................................................</p>
+                        <p>.......................................................................................................................................................................................</p>
+                      </div>
+
+                      <div className="flex justify-between mt-12 text-[14pt] px-10">
+                        <div className="text-center">
+                          <p className="mb-6">ลงชื่อ..................................................................</p>
+                          <p>(..............................................................)</p>
+                          <p>ผู้รับการประเมิน (นักเรียน)</p>
                         </div>
-
-                        <div className="mb-8 text-[14pt]">
-                          <p>ความคิดเห็นเพิ่มเติม/ข้อเสนอแนะ..........................................................................................................................................</p>
-                          <p>.......................................................................................................................................................................................</p>
-                        </div>
-
-                        <div className="flex justify-between mt-12 text-[14pt] px-10">
-                          <div className="text-center">
-                            <p className="mb-6">ลงชื่อ..................................................................</p>
-                            <p>(..............................................................)</p>
-                            <p>ผู้รับการประเมิน (นักเรียน)</p>
-                          </div>
-                          <div className="text-center">
-                            <p className="mb-6">ลงชื่อ..................................................................</p>
-                            <p>({config.trainerName || '..............................................................'})</p>
-                            <p>ผู้ประเมิน (ครูฝึก/ผู้ควบคุมงาน)</p>
-                          </div>
+                        <div className="text-center">
+                          <p className="mb-6">ลงชื่อ..................................................................</p>
+                          <p>({config.trainerName || '..............................................................'})</p>
+                          <p>ผู้ประเมิน (ครูฝึก/ผู้ควบคุมงาน)</p>
                         </div>
                       </div>
-                    );
-                  })}
-                </div>
-              )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
 
-              {/* พื้นที่สำหรับสร้างเอกสาร แบบนิเทศติดตามประเมินผล (ตามรายวิชา) */}
-              {activeEvalView === 'eval_supervision' && !isWorkplaceTrainer && (
-                <div id="dve-supervision-area" className="font-serif">
-                  {subjects.filter(s => s.isAnalyzed).map(sub => {
-                    const allSubTasks = sub.mainTasks?.flatMap(mt => mt.subTasks || []) || [];
-                    const mappedTasksForThisSubject = allSubTasks.filter(st => workplaceTasksFlat.some(wt => wt.id === st.id));
+            {/* พื้นที่สำหรับสร้างเอกสาร แบบนิเทศติดตามประเมินผล (ตามรายวิชา) */}
+            {/* แก้ไขเงื่อนไขให้เปิดสิทธิ์ตามบทบาทผู้ใช้ และยกเว้นเฉพาะครูฝึกในสถานประกอบการเท่านั้น */}
+            {activeEvalView === 'eval_supervision' && currentUserRole !== 'ครูฝึกในสถานประกอบการ' && (
+              <div id="dve-supervision-area" className="font-serif">
+                {/* เนื้อหาตารางนิเทศติดตามเดิมของคุณครูทั้งหมด (ไม่ต้องลบส่วนที่ Map วิชาออกนะครับ) */}
+                {subjects.filter(s => s.isAnalyzed).map(sub => {
+                  const allSubTasks = sub.mainTasks?.flatMap(mt => mt.subTasks || []) || [];
+                  const mappedTasksForThisSubject = allSubTasks.filter(st => workplaceTasksFlat.some(wt => wt.id === st.id));
 
-                    let colCount = 4; // checklist
-                    if (evalFormType === '5') colCount = 7;
-                    if (evalFormType === '4') colCount = 6;
-                    if (evalFormType === '3') colCount = 5;
+                  let colCount = 4; // checklist
+                  if (evalFormType === '5') colCount = 7;
+                  if (evalFormType === '4') colCount = 6;
+                  if (evalFormType === '3') colCount = 5;
 
-                    return (
-                      <div key={`supervision-${sub.id}`} className="page-break mb-20 font-serif">
-                        <div className="text-center font-bold mb-6">
-                          <h2 className="text-[18pt] mb-2">แบบนิเทศติดตามประเมินผลการฝึกอาชีพ</h2>
-                          <p className="text-[16pt] font-normal">ระหว่างวิทยาลัย....................................................... กับบริษัท {config.companyName || '.......................................................'}</p>
-                          <p className="text-[16pt] font-normal">รหัสวิชา {sub.code || '.........................'} รายวิชา {sub.name || '..................................................................'}</p>
-                          <p className="text-[16pt] font-normal">ประจำเดือน.......................................................</p>
+                  return (
+                    <div key={`supervision-${sub.id}`} className="page-break mb-20 font-serif">
+                      <div className="text-center font-bold mb-6">
+                        <h2 className="text-[18pt] mb-2">แบบนิเทศติดตามประเมินผลการฝึกอาชีพ</h2>
+                        <p className="text-[16pt] font-normal">ระหว่างวิทยาลัย....................................................... กับบริษัท {config.companyName || '.......................................................'}</p>
+                        <p className="text-[16pt] font-normal">รหัสวิชา {sub.code || '.........................'} รายวิชา {sub.name || '..................................................................'}</p>
+                        <p className="text-[16pt] font-normal">ประจำเดือน.......................................................</p>
+                      </div>
+
+                      <table style={{ width: '100%', borderCollapse: 'collapse', border: '1px solid black', marginBottom: '15px', fontSize: '14pt' }}>
+                        <tbody>
+                          <tr>
+                            <td style={{ width: '50%', border: '1px solid black', padding: '10px', verticalAlign: 'top', lineHeight: '1.8' }}>
+                              ชื่อ....................................................... นามสกุล...................................................<br />
+                              แผนกวิชา {config.fieldOfStudy || '.............................................'} ระดับชั้น {config.level || '........................'}<br />
+                              ภาคเรียนที่................................... ปีการศึกษา {config.academicYear || '....................................'}<br />
+                              ฝึกอาชีพระหว่างวันที่...................... เดือน............................................. พ.ศ. .........<br />
+                              ถึงวันที่...................... เดือน............................................. พ.ศ. .........<br />
+                            </td>
+                            <td style={{ width: '50%', border: '1px solid black', padding: '10px', verticalAlign: 'top', lineHeight: '1.8' }}>
+                              สถิติการฝึกอาชีพ<br />
+                              ระยะเวลาที่ประเมินตั้งแต่ วันที่........... เดือน................................... พ.ศ. .........<br />
+                              ถึงวันที่........... เดือน................................... พ.ศ. .........<br />
+                              <div className="flex justify-between pr-4 md:pr-12">
+                                <span>(  ) สาย...................ครั้ง</span>
+                                <span>(  ) ขาดงาน...........วัน</span>
+                              </div>
+                              <div className="flex justify-between pr-4 md:pr-12">
+                                <span>(  ) ลาป่วย...........วัน</span>
+                                <span>(  ) ลากิจ...........วัน</span>
+                              </div>
+                              วันที่ประเมิน.....................................................................................
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
+
+                      <p className="mb-2 font-bold text-[14pt]">คำชี้แจง โปรดทำเครื่องหมาย ✓ลงในช่องที่เห็นว่าตรงกับความเป็นจริงมากที่สุด</p>
+
+                      <table className="w-full text-[12pt] border-collapse border-2 border-black font-serif mb-4">
+                        <thead>
+                          <tr className="bg-slate-100 font-bold text-center">
+                            <th className="border border-black p-2 w-[40%] align-middle text-center">หัวข้อประเมิน (งานย่อย)</th>
+                            {evalFormType === 'checklist' && (
+                              <><th className="border border-black p-2 w-20 align-middle">ทำได้</th><th className="border border-black p-2 w-20 align-middle">ทำไม่ได้</th></>
+                            )}
+                            {evalFormType === '5' && (
+                              <><th className="border border-black p-2 w-12 align-middle">5</th><th className="border border-black p-2 w-12 align-middle">4</th><th className="border border-black p-2 w-12 align-middle">3</th><th className="border border-black p-2 w-12 align-middle">2</th><th className="border border-black p-2 w-12 align-middle">1</th></>
+                            )}
+                            {evalFormType === '4' && (
+                              <><th className="border border-black p-2 w-12 align-middle">4</th><th className="border border-black p-2 w-12 align-middle">3</th><th className="border border-black p-2 w-12 align-middle">2</th><th className="border border-black p-2 w-12 align-middle">1</th></>
+                            )}
+                            {evalFormType === '3' && (
+                              <><th className="border border-black p-2 w-12 align-middle">3</th><th className="border border-black p-2 w-12 align-middle">2</th><th className="border border-black p-2 w-12 align-middle">1</th></>
+                            )}
+                            <th className="border border-black p-2 align-middle">ข้อเสนอแนะ</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr className="bg-slate-50 font-bold"><td colSpan={colCount} className="border border-black p-2 pl-4">ส่วนที่ 1 การปฏิบัติงานย่อย</td></tr>
+                          {mappedTasksForThisSubject.length > 0 ? mappedTasksForThisSubject.map((st, i) => (
+                            <tr key={i} className="align-top">
+                              <td className="border border-black p-2 pl-4 text-left">{st.id} {cleanTaskName(st.name)}</td>
+                              {Array.from({ length: colCount - 2 }).map((_, j) => <td key={j} className="border border-black p-2"></td>)}
+                              <td className="border border-black p-2"></td>
+                            </tr>
+                          )) : (
+                            <tr><td colSpan={colCount} className="border border-black p-2 text-center text-slate-400">ไม่มีงานย่อยที่สอดคล้องกับสถานประกอบการ</td></tr>
+                          )}
+
+                          {selectedBehaviors.length > 0 && (
+                            <React.Fragment>
+                              <tr className="bg-slate-50 font-bold"><td colSpan={colCount} className="border border-black p-2 pl-4">ส่วนที่ 2 ด้านกิจนิสัย</td></tr>
+                              {selectedBehaviors.map((beh, i) => (
+                                <tr key={`beh-${i}`} className="align-top">
+                                  <td className="border border-black p-2 pl-4 text-left">{i + 1}. {beh}</td>
+                                  {Array.from({ length: colCount - 2 }).map((_, j) => <td key={j} className="border border-black p-2"></td>)}
+                                  <td className="border border-black p-2"></td>
+                                </tr>
+                              ))}
+                            </React.Fragment>
+                          )}
+                        </tbody>
+                      </table>
+
+                      <div className="mb-6 text-[12pt] leading-relaxed">
+                        <b>เกณฑ์การให้คะแนน (Rubric):</b><br />
+                        {evalFormType === '5' && "5 = ปฏิบัติได้ดีมาก/ถูกต้องสมบูรณ์, 4 = ปฏิบัติได้ดี/มีข้อผิดพลาดเล็กน้อย, 3 = ปฏิบัติได้ปานกลาง/ต้องได้รับคำแนะนำบ้าง, 2 = ปฏิบัติได้พอใช้/ต้องคอยกำกับดูแล, 1 = ต้องปรับปรุง/ไม่สามารถปฏิบัติได้"}
+                        {evalFormType === '4' && "4 = ปฏิบัติได้ดีมาก/ถูกต้องสมบูรณ์, 3 = ปฏิบัติได้ดี/มีข้อผิดพลาดเล็กน้อย, 2 = ปฏิบัติได้พอใช้/ต้องคอยกำกับดูแล, 1 = ต้องปรับปรุง/ไม่สามารถปฏิบัติได้"}
+                        {evalFormType === '3' && "3 = ปฏิบัติได้ดี/ถูกต้องสมบูรณ์, 2 = ปฏิบัติได้พอใช้/ต้องคอยกำกับดูแล, 1 = ต้องปรับปรุง/ไม่สามารถปฏิบัติได้"}
+                        {evalFormType === 'checklist' && "ทำได้ = สามารถปฏิบัติงานได้ตามจุดประสงค์การประเมิน, ทำไม่ได้ = ไม่สามารถปฏิบัติงานได้ตามจุดประสงค์การประเมิน"}
+                      </div>
+
+                      <div className="flex justify-between mt-12 text-[14pt] px-10">
+                        <div className="text-center">
+                          <p className="mb-6">ลงชื่อ..................................................................</p>
+                          <p>(..............................................................)</p>
+                          <p>ผู้รับการประเมิน</p>
                         </div>
+                        <div className="text-center">
+                          <p className="mb-6">ลงชื่อ..................................................................</p>
+                          <p>({config.trainerName || '..............................................................'})</p>
+                          <p>ผู้ประเมิน</p>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
 
-                        <table style={{ width: '100%', borderCollapse: 'collapse', border: '1px solid black', marginBottom: '15px', fontSize: '14pt' }}>
+            {/* พื้นที่สำหรับสร้างเอกสาร สรุปภาพรวมการฝึกงาน */}
+            {activeEvalView === 'dve1102' && !isWorkplaceTrainer && (
+              <div id="dve-11-02-area" className="font-serif">
+                {subjects.filter(s => s.isAnalyzed).map(sub => {
+                  const mappedTasksForThisSubject = workplaceTasksFlat.filter(wt => {
+                    let isMatched = false;
+                    if (wt.id) {
+                      const ids = String(wt.id).split(',').map(id => id.trim().toUpperCase());
+                      if (ids.some(id => id.startsWith(sub.id.toUpperCase()))) isMatched = true;
+                    }
+                    if (!isMatched && wt.detailed_steps) {
+                      wt.detailed_steps.forEach(step => {
+                        if (step.subjectTaskId) {
+                          const ids = String(step.subjectTaskId).split(',').map(id => id.trim().toUpperCase());
+                          if (ids.some(id => id.startsWith(sub.id.toUpperCase()))) isMatched = true;
+                        }
+                      });
+                    }
+                    return isMatched;
+                  });
+                  const unmappedTasksForThisSubject = unmappedTasks.filter(st => st.subjectId === sub.id);
+
+                  return (
+                    <div key={`dve1102-${sub.id}`} className="page-break mb-20 font-serif">
+                      <div className="text-right text-[10pt] mb-1 font-bold font-serif border border-black p-1 w-fit ml-auto">DVE-11-02</div>
+                      <div className="text-center font-bold mb-4">
+                        <h2 className="text-[18pt] mb-2">แบบสรุปผลการเรียนรู้รายวิชา</h2>
+                      </div>
+
+                      <div className="text-[12pt] mb-4 leading-relaxed">
+                        รหัสวิชา {sub.code || '................'} ชื่อวิชา {sub.name || '........................................................'} หน่วยกิต {sub.credits || '........'}<br />
+                        <table className="w-full mt-2" style={{ border: 'none', marginBottom: '0' }}>
                           <tbody>
                             <tr>
-                              <td style={{ width: '50%', border: '1px solid black', padding: '10px', verticalAlign: 'top', lineHeight: '1.8' }}>
-                                ชื่อ....................................................... นามสกุล...................................................<br />
-                                แผนกวิชา {config.fieldOfStudy || '.............................................'} ระดับชั้น {config.level || '........................'}<br />
-                                ภาคเรียนที่................................... ปีการศึกษา {config.academicYear || '....................................'}<br />
-                                ฝึกอาชีพระหว่างวันที่...................... เดือน............................................. พ.ศ. .........<br />
-                                ถึงวันที่...................... เดือน............................................. พ.ศ. .........<br />
-                              </td>
-                              <td style={{ width: '50%', border: '1px solid black', padding: '10px', verticalAlign: 'top', lineHeight: '1.8' }}>
-                                สถิติการฝึกอาชีพ<br />
-                                ระยะเวลาที่ประเมินตั้งแต่ วันที่........... เดือน................................... พ.ศ. .........<br />
-                                ถึงวันที่........... เดือน................................... พ.ศ. .........<br />
-                                <div className="flex justify-between pr-4 md:pr-12">
-                                  <span>(  ) สาย...................ครั้ง</span>
-                                  <span>(  ) ขาดงาน...........วัน</span>
-                                </div>
-                                <div className="flex justify-between pr-4 md:pr-12">
-                                  <span>(  ) ลาป่วย...........วัน</span>
-                                  <span>(  ) ลากิจ...........วัน</span>
-                                </div>
-                                วันที่ประเมิน.....................................................................................
-                              </td>
+                              <td style={{ border: 'none', padding: '0', width: '60%' }}>ชื่อ-สกุล ..........................................................................................</td>
+                              <td style={{ border: 'none', padding: '0' }}>รหัสผู้เรียน ...........................................................</td>
                             </tr>
                           </tbody>
                         </table>
-
-                        <p className="mb-2 font-bold text-[14pt]">คำชี้แจง โปรดทำเครื่องหมาย ✓ลงในช่องที่เห็นว่าตรงกับความเป็นจริงมากที่สุด</p>
-
-                        <table className="w-full text-[12pt] border-collapse border-2 border-black font-serif mb-4">
-                          <thead>
-                            <tr className="bg-slate-100 font-bold text-center">
-                              <th className="border border-black p-2 w-[40%] align-middle text-center">หัวข้อประเมิน (งานย่อย)</th>
-                              {evalFormType === 'checklist' && (
-                                <><th className="border border-black p-2 w-20 align-middle">ทำได้</th><th className="border border-black p-2 w-20 align-middle">ทำไม่ได้</th></>
-                              )}
-                              {evalFormType === '5' && (
-                                <><th className="border border-black p-2 w-12 align-middle">5</th><th className="border border-black p-2 w-12 align-middle">4</th><th className="border border-black p-2 w-12 align-middle">3</th><th className="border border-black p-2 w-12 align-middle">2</th><th className="border border-black p-2 w-12 align-middle">1</th></>
-                              )}
-                              {evalFormType === '4' && (
-                                <><th className="border border-black p-2 w-12 align-middle">4</th><th className="border border-black p-2 w-12 align-middle">3</th><th className="border border-black p-2 w-12 align-middle">2</th><th className="border border-black p-2 w-12 align-middle">1</th></>
-                              )}
-                              {evalFormType === '3' && (
-                                <><th className="border border-black p-2 w-12 align-middle">3</th><th className="border border-black p-2 w-12 align-middle">2</th><th className="border border-black p-2 w-12 align-middle">1</th></>
-                              )}
-                              <th className="border border-black p-2 align-middle">ข้อเสนอแนะ</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            <tr className="bg-slate-50 font-bold"><td colSpan={colCount} className="border border-black p-2 pl-4">ส่วนที่ 1 การปฏิบัติงานย่อย</td></tr>
-                            {mappedTasksForThisSubject.length > 0 ? mappedTasksForThisSubject.map((st, i) => (
-                              <tr key={i} className="align-top">
-                                <td className="border border-black p-2 pl-4 text-left">{st.id} {cleanTaskName(st.name)}</td>
-                                {Array.from({ length: colCount - 2 }).map((_, j) => <td key={j} className="border border-black p-2"></td>)}
-                                <td className="border border-black p-2"></td>
-                              </tr>
-                            )) : (
-                              <tr><td colSpan={colCount} className="border border-black p-2 text-center text-slate-400">ไม่มีงานย่อยที่สอดคล้องกับสถานประกอบการ</td></tr>
-                            )}
-
-                            {selectedBehaviors.length > 0 && (
-                              <React.Fragment>
-                                <tr className="bg-slate-50 font-bold"><td colSpan={colCount} className="border border-black p-2 pl-4">ส่วนที่ 2 ด้านกิจนิสัย</td></tr>
-                                {selectedBehaviors.map((beh, i) => (
-                                  <tr key={`beh-${i}`} className="align-top">
-                                    <td className="border border-black p-2 pl-4 text-left">{i + 1}. {beh}</td>
-                                    {Array.from({ length: colCount - 2 }).map((_, j) => <td key={j} className="border border-black p-2"></td>)}
-                                    <td className="border border-black p-2"></td>
-                                  </tr>
-                                ))}
-                              </React.Fragment>
-                            )}
-                          </tbody>
-                        </table>
-
-                        <div className="mb-6 text-[12pt] leading-relaxed">
-                          <b>เกณฑ์การให้คะแนน (Rubric):</b><br />
-                          {evalFormType === '5' && "5 = ปฏิบัติได้ดีมาก/ถูกต้องสมบูรณ์, 4 = ปฏิบัติได้ดี/มีข้อผิดพลาดเล็กน้อย, 3 = ปฏิบัติได้ปานกลาง/ต้องได้รับคำแนะนำบ้าง, 2 = ปฏิบัติได้พอใช้/ต้องคอยกำกับดูแล, 1 = ต้องปรับปรุง/ไม่สามารถปฏิบัติได้"}
-                          {evalFormType === '4' && "4 = ปฏิบัติได้ดีมาก/ถูกต้องสมบูรณ์, 3 = ปฏิบัติได้ดี/มีข้อผิดพลาดเล็กน้อย, 2 = ปฏิบัติได้พอใช้/ต้องคอยกำกับดูแล, 1 = ต้องปรับปรุง/ไม่สามารถปฏิบัติได้"}
-                          {evalFormType === '3' && "3 = ปฏิบัติได้ดี/ถูกต้องสมบูรณ์, 2 = ปฏิบัติได้พอใช้/ต้องคอยกำกับดูแล, 1 = ต้องปรับปรุง/ไม่สามารถปฏิบัติได้"}
-                          {evalFormType === 'checklist' && "ทำได้ = สามารถปฏิบัติงานได้ตามจุดประสงค์การประเมิน, ทำไม่ได้ = ไม่สามารถปฏิบัติงานได้ตามจุดประสงค์การประเมิน"}
-                        </div>
-
-                        <div className="flex justify-between mt-12 text-[14pt] px-10">
-                          <div className="text-center">
-                            <p className="mb-6">ลงชื่อ..................................................................</p>
-                            <p>(..............................................................)</p>
-                            <p>ผู้รับการประเมิน</p>
-                          </div>
-                          <div className="text-center">
-                            <p className="mb-6">ลงชื่อ..................................................................</p>
-                            <p>({config.trainerName || '..............................................................'})</p>
-                            <p>ผู้ประเมิน</p>
-                          </div>
-                        </div>
+                        ชื่อสถานประกอบการ {config.companyName || '............................................................................................................'}
                       </div>
-                    );
-                  })}
-                </div>
-              )}
 
-              {/* พื้นที่สำหรับสร้างเอกสาร สรุปภาพรวมการฝึกงาน */}
-              {activeEvalView === 'dve1102' && !isWorkplaceTrainer && (
-                <div id="dve-11-02-area" className="font-serif">
-                  {subjects.filter(s => s.isAnalyzed).map(sub => {
-                    const mappedTasksForThisSubject = workplaceTasksFlat.filter(wt => {
-                      let isMatched = false;
-                      if (wt.id) {
-                        const ids = String(wt.id).split(',').map(id => id.trim().toUpperCase());
-                        if (ids.some(id => id.startsWith(sub.id.toUpperCase()))) isMatched = true;
-                      }
-                      if (!isMatched && wt.detailed_steps) {
-                        wt.detailed_steps.forEach(step => {
-                          if (step.subjectTaskId) {
-                            const ids = String(step.subjectTaskId).split(',').map(id => id.trim().toUpperCase());
-                            if (ids.some(id => id.startsWith(sub.id.toUpperCase()))) isMatched = true;
-                          }
-                        });
-                      }
-                      return isMatched;
-                    });
-                    const unmappedTasksForThisSubject = unmappedTasks.filter(st => st.subjectId === sub.id);
+                      <table className="w-full text-[12pt] border-collapse border border-black font-serif">
+                        <thead>
+                          <tr className="bg-slate-100 text-center font-bold">
+                            <th className="border border-black p-2 align-middle text-left" rowSpan="2" style={{ width: '40%' }}>ชื่องานในสถานประกอบการ (งานหลัก)</th>
+                            <th className="border border-black p-2 align-middle" colSpan="2" style={{ width: '12%' }}>จำนวน</th>
+                            <th className="border border-black p-2" colSpan="4">สถานประกอบการ (70%)</th>
+                            <th className="border border-black p-2" colSpan="2">ครูนิเทศก์ (30%)</th>
+                            <th className="border border-black p-2 align-middle bg-yellow-100" rowSpan="2" style={{ width: '8%' }}>รวม</th>
+                          </tr>
+                          <tr className="bg-slate-50 text-center font-bold text-[11pt]">
+                            <th className="border border-black p-1" colSpan="2">คะแนน</th>
+                            <th className="border border-black p-1 w-10">ครั้งที่ 1</th>
+                            <th className="border border-black p-1 w-10">ครั้งที่ 2</th>
+                            <th className="border border-black p-1 w-10">ครั้งที่ 3</th>
+                            <th className="border border-black p-1 w-14">ร้อยละ 70</th>
+                            <th className="border border-black p-1 w-12">คะแนน</th>
+                            <th className="border border-black p-1 w-14">ร้อยละ 30</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr className="bg-slate-50">
+                            <td colSpan="10" className="border border-black p-2 font-bold text-left">
+                              ส่วนที่ 1 การปฏิบัติงาน (เรียงตามรหัสงานรายวิชา {sub.id})
+                            </td>
+                          </tr>
 
-                    return (
-                      <div key={`dve1102-${sub.id}`} className="page-break mb-20 font-serif">
-                        <div className="text-right text-[10pt] mb-1 font-bold font-serif border border-black p-1 w-fit ml-auto">DVE-11-02</div>
-                        <div className="text-center font-bold mb-4">
-                          <h2 className="text-[18pt] mb-2">แบบสรุปผลการเรียนรู้รายวิชา</h2>
-                        </div>
+                          {(() => {
+                            // 1. ดึงงานย่อยทั้งหมดจากพูล (Pool) ของรายวิชานี้
+                            const subjectSubTasks = sub.mainTasks?.flatMap(mt => mt.subTasks || []) || [];
 
-                        <div className="text-[12pt] mb-4 leading-relaxed">
-                          รหัสวิชา {sub.code || '................'} ชื่อวิชา {sub.name || '........................................................'} หน่วยกิต {sub.credits || '........'}<br />
-                          <table className="w-full mt-2" style={{ border: 'none', marginBottom: '0' }}>
-                            <tbody>
-                              <tr>
-                                <td style={{ border: 'none', padding: '0', width: '60%' }}>ชื่อ-สกุล ..........................................................................................</td>
-                                <td style={{ border: 'none', padding: '0' }}>รหัสผู้เรียน ...........................................................</td>
-                              </tr>
-                            </tbody>
-                          </table>
-                          ชื่อสถานประกอบการ {config.companyName || '............................................................................................................'}
-                        </div>
-
-                        <table className="w-full text-[12pt] border-collapse border border-black font-serif">
-                          <thead>
-                            <tr className="bg-slate-100 text-center font-bold">
-                              <th className="border border-black p-2 align-middle text-left" rowSpan="2" style={{ width: '40%' }}>ชื่องานในสถานประกอบการ (งานหลัก)</th>
-                              <th className="border border-black p-2 align-middle" colSpan="2" style={{ width: '12%' }}>จำนวน</th>
-                              <th className="border border-black p-2" colSpan="4">สถานประกอบการ (70%)</th>
-                              <th className="border border-black p-2" colSpan="2">ครูนิเทศก์ (30%)</th>
-                              <th className="border border-black p-2 align-middle bg-yellow-100" rowSpan="2" style={{ width: '8%' }}>รวม</th>
-                            </tr>
-                            <tr className="bg-slate-50 text-center font-bold text-[11pt]">
-                              <th className="border border-black p-1" colSpan="2">คะแนน</th>
-                              <th className="border border-black p-1 w-10">ครั้งที่ 1</th>
-                              <th className="border border-black p-1 w-10">ครั้งที่ 2</th>
-                              <th className="border border-black p-1 w-10">ครั้งที่ 3</th>
-                              <th className="border border-black p-1 w-14">ร้อยละ 70</th>
-                              <th className="border border-black p-1 w-12">คะแนน</th>
-                              <th className="border border-black p-1 w-14">ร้อยละ 30</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            <tr className="bg-slate-50">
-                              <td colSpan="10" className="border border-black p-2 font-bold text-left">
-                                ส่วนที่ 1 การปฏิบัติงาน (เรียงตามรหัสงานรายวิชา {sub.id})
-                              </td>
-                            </tr>
-
-                            {(() => {
-                              // 1. ดึงงานย่อยทั้งหมดจากพูล (Pool) ของรายวิชานี้
-                              const subjectSubTasks = sub.mainTasks?.flatMap(mt => mt.subTasks || []) || [];
-
-                              // 2. กรองเฉพาะงานย่อยที่ถูกนำมาจับคู่ (Mapped) กับงานในสถานประกอบการแล้ว
-                              const filteredTasks = subjectSubTasks.filter(st => {
-                                return workplaceTasksFlat.some(wt => {
-                                  const ids = String(wt.id || '').split(',').map(i => i.trim().toUpperCase());
-                                  const stepIds = (wt.detailed_steps || []).flatMap(s => String(s.subjectTaskId || '').split(',').map(i => i.trim().toUpperCase()));
-                                  return ids.includes(st.id.toUpperCase()) || stepIds.includes(st.id.toUpperCase());
-                                });
+                            // 2. กรองเฉพาะงานย่อยที่ถูกนำมาจับคู่ (Mapped) กับงานในสถานประกอบการแล้ว
+                            const filteredTasks = subjectSubTasks.filter(st => {
+                              return workplaceTasksFlat.some(wt => {
+                                const ids = String(wt.id || '').split(',').map(i => i.trim().toUpperCase());
+                                const stepIds = (wt.detailed_steps || []).flatMap(s => String(s.subjectTaskId || '').split(',').map(i => i.trim().toUpperCase()));
+                                return ids.includes(st.id.toUpperCase()) || stepIds.includes(st.id.toUpperCase());
                               });
+                            });
 
-                              // 3. แสดงผลเรียงตามรหัสงานย่อยรายวิชา (เช่น A1-1, A1-2) โดยไม่มีเลขลำดับ 1. 2. 3. นำหน้า
-                              return filteredTasks.length > 0 ? filteredTasks.map((st) => (
-                                <tr key={st.id} className="align-top">
-                                  <td className="border border-black p-2 pl-4 text-left font-serif">
-                                    <span className="font-bold">{st.id}</span> {cleanTaskName(st.name)}
-                                  </td>
-                                  <td className="border border-black p-1 w-10"></td>
-                                  <td className="border border-black p-1 text-center text-[10pt] align-middle text-slate-700">คะแนน</td>
-                                  <td className="border border-black p-2"></td>
-                                  <td className="border border-black p-2"></td>
-                                  <td className="border border-black p-2"></td>
-                                  <td className="border border-black p-2 bg-blue-50/50"></td>
-                                  <td className="border border-black p-2"></td>
-                                  <td className="border border-black p-2 bg-blue-50/50"></td>
-                                  <td className="border border-black p-2"></td>
-                                </tr>
-                              )) : (
-                                <tr>
-                                  <td colSpan="10" className="border border-black p-2 text-center text-slate-400 italic">
-                                    -- ไม่พบงานย่อยของรายวิชา {sub.id} ที่สอดคล้องกับการฝึก --
-                                  </td>
-                                </tr>
-                              );
-                            })()}
-
-                            {/* ส่วนที่ 2 ด้านกิจนิสัย */}
-                            <tr className="bg-blue-100/30">
-                              <td colSpan="10" className="border border-black p-2 font-bold pl-6">ส่วนที่ 2 ด้านกิจนิสัย</td>
-                            </tr>
-                            {selectedBehaviors.map((beh, idx) => (
-                              <tr key={`beh-${idx}`} className="align-top">
-                                <td className="border border-black p-2 pl-4 text-left">{idx + 1}. {beh}</td>
+                            // 3. แสดงผลเรียงตามรหัสงานย่อยรายวิชา (เช่น A1-1, A1-2) โดยไม่มีเลขลำดับ 1. 2. 3. นำหน้า
+                            return filteredTasks.length > 0 ? filteredTasks.map((st) => (
+                              <tr key={st.id} className="align-top">
+                                <td className="border border-black p-2 pl-4 text-left font-serif">
+                                  <span className="font-bold">{st.id}</span> {cleanTaskName(st.name)}
+                                </td>
                                 <td className="border border-black p-1 w-10"></td>
                                 <td className="border border-black p-1 text-center text-[10pt] align-middle text-slate-700">คะแนน</td>
                                 <td className="border border-black p-2"></td>
@@ -2951,25 +2953,51 @@ const App = () => {
                                 <td className="border border-black p-2 bg-blue-50/50"></td>
                                 <td className="border border-black p-2"></td>
                               </tr>
-                            ))}
+                            )) : (
+                              <tr>
+                                <td colSpan="10" className="border border-black p-2 text-center text-slate-400 italic">
+                                  -- ไม่พบงานย่อยของรายวิชา {sub.id} ที่สอดคล้องกับการฝึก --
+                                </td>
+                              </tr>
+                            );
+                          })()}
 
-                            {/* ส่วนสรุปคะแนน */}
-                            <tr className="font-bold">
-                              <td className="border border-black p-2 text-center">รวมคะแนนฝึกในสถานประกอบการ</td>
-                              <td className="border border-black p-1"></td>
-                              <td className="border border-black p-1 text-center font-bold text-[10pt] align-middle text-slate-700">คะแนน</td>
+                          {/* ส่วนที่ 2 ด้านกิจนิสัย */}
+                          <tr className="bg-blue-100/30">
+                            <td colSpan="10" className="border border-black p-2 font-bold pl-6">ส่วนที่ 2 ด้านกิจนิสัย</td>
+                          </tr>
+                          {selectedBehaviors.map((beh, idx) => (
+                            <tr key={`beh-${idx}`} className="align-top">
+                              <td className="border border-black p-2 pl-4 text-left">{idx + 1}. {beh}</td>
+                              <td className="border border-black p-1 w-10"></td>
+                              <td className="border border-black p-1 text-center text-[10pt] align-middle text-slate-700">คะแนน</td>
                               <td className="border border-black p-2"></td>
                               <td className="border border-black p-2"></td>
                               <td className="border border-black p-2"></td>
-                              <td className="border border-black p-2 bg-gray-200"></td>
-                              <td className="border border-black p-2 bg-gray-200"></td>
-                              <td className="border border-black p-2 bg-gray-200"></td>
-                              <td className="border border-black p-2 bg-yellow-200"></td>
+                              <td className="border border-black p-2 bg-blue-50/50"></td>
+                              <td className="border border-black p-2"></td>
+                              <td className="border border-black p-2 bg-blue-50/50"></td>
+                              <td className="border border-black p-2"></td>
                             </tr>
-                          </tbody>
-                        </table>
+                          ))}
 
-                        <div className="flex justify-between mt-12 text-[14pt] px-10">
+                          {/* ส่วนสรุปคะแนน */}
+                          <tr className="font-bold">
+                            <td className="border border-black p-2 text-center">รวมคะแนนฝึกในสถานประกอบการ</td>
+                            <td className="border border-black p-1"></td>
+                            <td className="border border-black p-1 text-center font-bold text-[10pt] align-middle text-slate-700">คะแนน</td>
+                            <td className="border border-black p-2"></td>
+                            <td className="border border-black p-2"></td>
+                            <td className="border border-black p-2"></td>
+                            <td className="border border-black p-2 bg-gray-200"></td>
+                            <td className="border border-black p-2 bg-gray-200"></td>
+                            <td className="border border-black p-2 bg-gray-200"></td>
+                            <td className="border border-black p-2 bg-yellow-200"></td>
+                          </tr>
+                        </tbody>
+                      </table>
+
+                      <div className="flex justify-between mt-12 text-[14pt] px-10">
                           <div className="text-center">
                             <p className="mb-6">ลงชื่อ..................................................................</p>
                             <p>(..............................................................)</p>
@@ -2982,17 +3010,15 @@ const App = () => {
                           </div>
                         </div>
                       </div>
-                    );
+                    ); // ปิดส่วน return ของการ map()
                   })}
-                </div>
-              )}
+                </div> // ปิด div id="dve-11-02-area"
+              )} 
+            </div> 
+            )} 
 
-            </div>
-          </div>
-        )}
-
-        {/* SHARE TAB (แชร์แผนฝึก) */}
-        {activeTab === 'share' && (
+  {/* SHARE TAB (แชร์แผนฝึก) */}
+  {activeTab === 'share' && (
           <div className="max-w-6xl mx-auto space-y-8 animate-in slide-in-from-bottom-5 duration-500 font-serif">
             <div className="bg-indigo-600 p-8 rounded-3xl text-white shadow-xl flex flex-col md:flex-row justify-between items-center gap-6">
               <div className="flex-1 space-y-2">
@@ -3021,171 +3047,176 @@ const App = () => {
               </button>
             </div>
           </div>
-        )}
+        )
+        }
 
         {/* CLOUD TAB (คลังแผนฝึกอาชีพส่วนกลาง) */}
-        {activeTab === 'cloud' && (
-          <div className="max-w-6xl mx-auto space-y-8 animate-in slide-in-from-bottom-5 duration-500 font-serif">
-            <div className="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm font-serif">
-              <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4 border-b border-slate-100 pb-6">
-                <div>
-                  <h2 className="text-xl font-black text-slate-800 flex items-center gap-2">
-                    <Cloud className="text-indigo-500" /> คลังแผนฝึกอาชีพส่วนกลาง
-                    {isDeveloper && <span className="ml-2 bg-amber-100 text-amber-700 text-[10px] px-2 py-1 rounded-md">โหมดผู้ดูแลระบบ</span>}
-                  </h2>
-                  <p className="text-sm text-slate-500 mt-1">เลือกดาวน์โหลดหรือนำเข้าแผนฝึกของสถานประกอบการต่างๆ ที่เพื่อนครูจัดทำไว้</p>
+        {
+          activeTab === 'cloud' && (
+            <div className="max-w-6xl mx-auto space-y-8 animate-in slide-in-from-bottom-5 duration-500 font-serif">
+              <div className="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm font-serif">
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4 border-b border-slate-100 pb-6">
+                  <div>
+                    <h2 className="text-xl font-black text-slate-800 flex items-center gap-2">
+                      <Cloud className="text-indigo-500" /> คลังแผนฝึกอาชีพส่วนกลาง
+                      {isDeveloper && <span className="ml-2 bg-amber-100 text-amber-700 text-[10px] px-2 py-1 rounded-md">โหมดผู้ดูแลระบบ</span>}
+                    </h2>
+                    <p className="text-sm text-slate-500 mt-1">เลือกดาวน์โหลดหรือนำเข้าแผนฝึกของสถานประกอบการต่างๆ ที่เพื่อนครูจัดทำไว้</p>
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+                    <div className="relative">
+                      <Filter className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+                      <select
+                        className="w-full sm:w-48 pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-700 outline-none focus:ring-2 focus:ring-indigo-500 appearance-none"
+                        value={filterProvince}
+                        onChange={(e) => setFilterProvince(e.target.value)}
+                      >
+                        <option value="">ทุกจังหวัด</option>
+                        {PROVINCES.map(p => <option key={`filter-${p}`} value={p}>{p}</option>)}
+                      </select>
+                    </div>
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+                      <input
+                        type="text"
+                        placeholder="ค้นหาสถานประกอบการ..."
+                        className="w-full sm:w-64 pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-700 outline-none focus:ring-2 focus:ring-indigo-500"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                      />
+                    </div>
+                  </div>
                 </div>
 
-                <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
-                  <div className="relative">
-                    <Filter className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
-                    <select
-                      className="w-full sm:w-48 pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-700 outline-none focus:ring-2 focus:ring-indigo-500 appearance-none"
-                      value={filterProvince}
-                      onChange={(e) => setFilterProvince(e.target.value)}
-                    >
-                      <option value="">ทุกจังหวัด</option>
-                      {PROVINCES.map(p => <option key={`filter-${p}`} value={p}>{p}</option>)}
-                    </select>
-                  </div>
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
-                    <input
-                      type="text"
-                      placeholder="ค้นหาสถานประกอบการ..."
-                      className="w-full sm:w-64 pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-700 outline-none focus:ring-2 focus:ring-indigo-500"
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                    />
-                  </div>
-                </div>
-              </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {cloudData.length === 0 ? (
+                    <div className="col-span-full py-16 text-center text-slate-400 font-bold flex flex-col items-center gap-2">
+                      <Loader2 className="animate-spin mb-2" size={32} />
+                      กำลังเชื่อมต่อคลังข้อมูล... หรือยังไม่มีข้อมูลในระบบ
+                    </div>
+                  ) : (
+                    cloudData.filter(item => {
+                      const matchProv = filterProvince === '' || item.province === filterProvince;
+                      const matchQuery = searchQuery === '' || item.companyName?.toLowerCase().includes(searchQuery.toLowerCase());
+                      return matchProv && matchQuery;
+                    }).map((item, idx) => (
+                      <div key={item.id || idx} className={`bg-slate-50 border rounded-2xl p-5 hover:shadow-md transition-shadow group flex flex-col h-full relative ${item.deleteRequest ? 'border-orange-300 bg-orange-50/50' : 'border-slate-200'}`}>
+                        <div className="flex-1">
+                          <div className="flex items-start justify-between gap-2 mb-3">
+                            <h3 className="font-black text-indigo-900 text-lg leading-tight line-clamp-2 pr-6" title={item.companyName}>{item.companyName || 'ไม่ระบุชื่อบริษัท'}</h3>
+                            <button
+                              onClick={() => setDeleteModalItem(item)}
+                              className="absolute top-5 right-4 text-slate-300 hover:text-red-500 p-1 flex-shrink-0 transition-colors"
+                              title={isDeveloper ? "ลบข้อมูล (Admin)" : "แจ้งลบข้อมูล"}
+                            >
+                              <Trash2 size={18} />
+                            </button>
+                          </div>
+                          <div className="space-y-2 mb-6">
+                            <p className="text-xs font-bold text-slate-600 flex items-center gap-2"><MapPin size={14} className="text-rose-500" /> {item.province || 'ไม่ระบุจังหวัด'}</p>
+                            <p className="text-xs font-bold text-slate-600 flex items-center gap-2"><User size={14} className="text-indigo-500" /> ระดับ: {item.level || item.config?.level || 'ไม่ระบุ'}</p>
+                            <p className="text-xs font-bold text-slate-600 flex items-center gap-2"><User size={14} className="text-blue-500" /> จัดทำโดย: {item.creatorName || 'ไม่ระบุ'}</p>
+                            <p className="text-[10px] text-slate-400 flex items-center gap-2 mt-2"><Clock size={12} /> อัปโหลดเมื่อ: {item.createdAt?.toDate ? item.createdAt.toDate().toLocaleDateString('th-TH') : 'ไม่ระบุ'}</p>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {cloudData.length === 0 ? (
-                  <div className="col-span-full py-16 text-center text-slate-400 font-bold flex flex-col items-center gap-2">
-                    <Loader2 className="animate-spin mb-2" size={32} />
-                    กำลังเชื่อมต่อคลังข้อมูล... หรือยังไม่มีข้อมูลในระบบ
-                  </div>
-                ) : (
-                  cloudData.filter(item => {
-                    const matchProv = filterProvince === '' || item.province === filterProvince;
-                    const matchQuery = searchQuery === '' || item.companyName?.toLowerCase().includes(searchQuery.toLowerCase());
-                    return matchProv && matchQuery;
-                  }).map((item, idx) => (
-                    <div key={item.id || idx} className={`bg-slate-50 border rounded-2xl p-5 hover:shadow-md transition-shadow group flex flex-col h-full relative ${item.deleteRequest ? 'border-orange-300 bg-orange-50/50' : 'border-slate-200'}`}>
-                      <div className="flex-1">
-                        <div className="flex items-start justify-between gap-2 mb-3">
-                          <h3 className="font-black text-indigo-900 text-lg leading-tight line-clamp-2 pr-6" title={item.companyName}>{item.companyName || 'ไม่ระบุชื่อบริษัท'}</h3>
+                            {item.deleteRequest && (
+                              <div className="mt-3 bg-orange-100 border border-orange-200 text-orange-800 text-[10px] p-2 rounded-xl font-bold flex flex-col gap-2">
+                                <div className="flex items-start gap-1.5">
+                                  <AlertCircle size={14} className="flex-shrink-0 mt-0.5 text-orange-600" />
+                                  <span>แจ้งลบ: {item.deleteRequest}</span>
+                                </div>
+                                {isDeveloper && (
+                                  <button onClick={() => handleAdminCancelDelete(item.id)} className="w-full bg-white text-orange-600 py-1.5 rounded-lg hover:bg-orange-50 border border-orange-200 transition-colors">
+                                    ยกเลิกคำขอลบ (คืนสถานะ)
+                                  </button>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="flex gap-2 mt-auto pt-4 border-t border-slate-200">
                           <button
-                            onClick={() => setDeleteModalItem(item)}
-                            className="absolute top-5 right-4 text-slate-300 hover:text-red-500 p-1 flex-shrink-0 transition-colors"
-                            title={isDeveloper ? "ลบข้อมูล (Admin)" : "แจ้งลบข้อมูล"}
+                            onClick={() => loadFromCloudItem(item)}
+                            className="flex-1 bg-indigo-100 hover:bg-indigo-200 text-indigo-700 py-2 rounded-xl text-xs font-black transition-colors flex justify-center items-center gap-1"
+                            title={isDeveloper ? "นำเข้าเพื่อแก้ไขทับข้อมูลเดิม" : "นำเข้าเพื่อแก้ไข"}
                           >
-                            <Trash2 size={18} />
+                            {isDeveloper ? <Edit size={14} /> : <Wand2 size={14} />} {isDeveloper ? 'แก้ไขข้อมูล' : 'นำเข้า'}
+                          </button>
+                          <button
+                            onClick={() => downloadCloudItemAsFile(item)}
+                            className="flex-1 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 py-2 rounded-xl text-xs font-black transition-colors flex justify-center items-center gap-1"
+                          >
+                            <DownloadCloud size={14} /> โหลดไฟล์
                           </button>
                         </div>
-                        <div className="space-y-2 mb-6">
-                          <p className="text-xs font-bold text-slate-600 flex items-center gap-2"><MapPin size={14} className="text-rose-500" /> {item.province || 'ไม่ระบุจังหวัด'}</p>
-                          <p className="text-xs font-bold text-slate-600 flex items-center gap-2"><User size={14} className="text-indigo-500" /> ระดับ: {item.level || item.config?.level || 'ไม่ระบุ'}</p>
-                          <p className="text-xs font-bold text-slate-600 flex items-center gap-2"><User size={14} className="text-blue-500" /> จัดทำโดย: {item.creatorName || 'ไม่ระบุ'}</p>
-                          <p className="text-[10px] text-slate-400 flex items-center gap-2 mt-2"><Clock size={12} /> อัปโหลดเมื่อ: {item.createdAt?.toDate ? item.createdAt.toDate().toLocaleDateString('th-TH') : 'ไม่ระบุ'}</p>
-
-                          {item.deleteRequest && (
-                            <div className="mt-3 bg-orange-100 border border-orange-200 text-orange-800 text-[10px] p-2 rounded-xl font-bold flex flex-col gap-2">
-                              <div className="flex items-start gap-1.5">
-                                <AlertCircle size={14} className="flex-shrink-0 mt-0.5 text-orange-600" />
-                                <span>แจ้งลบ: {item.deleteRequest}</span>
-                              </div>
-                              {isDeveloper && (
-                                <button onClick={() => handleAdminCancelDelete(item.id)} className="w-full bg-white text-orange-600 py-1.5 rounded-lg hover:bg-orange-50 border border-orange-200 transition-colors">
-                                  ยกเลิกคำขอลบ (คืนสถานะ)
-                                </button>
-                              )}
-                            </div>
-                          )}
-                        </div>
                       </div>
-
-                      <div className="flex gap-2 mt-auto pt-4 border-t border-slate-200">
-                        <button
-                          onClick={() => loadFromCloudItem(item)}
-                          className="flex-1 bg-indigo-100 hover:bg-indigo-200 text-indigo-700 py-2 rounded-xl text-xs font-black transition-colors flex justify-center items-center gap-1"
-                          title={isDeveloper ? "นำเข้าเพื่อแก้ไขทับข้อมูลเดิม" : "นำเข้าเพื่อแก้ไข"}
-                        >
-                          {isDeveloper ? <Edit size={14} /> : <Wand2 size={14} />} {isDeveloper ? 'แก้ไขข้อมูล' : 'นำเข้า'}
-                        </button>
-                        <button
-                          onClick={() => downloadCloudItemAsFile(item)}
-                          className="flex-1 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 py-2 rounded-xl text-xs font-black transition-colors flex justify-center items-center gap-1"
-                        >
-                          <DownloadCloud size={14} /> โหลดไฟล์
-                        </button>
-                      </div>
-                    </div>
-                  ))
-                )}
+                    ))
+                  )}
+                </div>
               </div>
             </div>
-          </div>
-        )}
+          )
+        }
 
         {/* FEEDBACK TAB (ประเมินระบบ) */}
-        {activeTab === 'feedback' && (
-          <div className="max-w-4xl mx-auto space-y-8 animate-in slide-in-from-bottom-5 duration-500 font-serif">
-            <div className="bg-white p-10 rounded-3xl border border-slate-200 shadow-sm">
-              <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-8 border-b pb-6 gap-6">
-                <div>
-                  <h2 className="text-2xl font-black text-indigo-900 uppercase flex items-center gap-3"><Star /> ๗. ประเมินการใช้งานระบบ</h2>
-                  <p className="text-xs text-slate-400 mt-2 font-bold uppercase tracking-widest italic">ความคิดเห็นของคุณช่วยให้เราพัฒนาระบบให้ดียิ่งขึ้น</p>
-                </div>
-              </div>
-
-              <div className="space-y-6 mb-8">
-                {[
-                  { key: 'ux', label: '1. ความสะดวกและง่ายต่อการใช้งานระบบ (UX/UI)' },
-                  { key: 'ai', label: '2. ความแม่นยำและคุณภาพของ AI ในการวิเคราะห์งาน' },
-                  { key: 'speed', label: '3. ความรวดเร็วในการทำงานและประมวลผล' },
-                  { key: 'reports', label: '4. ความถูกต้องและครบถ้วนของรูปแบบรายงานที่ได้ (ฝอ.1, ฝอ.2, แบบประเมิน)' },
-                  { key: 'overall', label: '5. ประโยชน์ภาพรวมที่ได้รับจากการใช้งานระบบนี้' }
-                ].map((q, idx) => (
-                  <div key={q.key} className="bg-slate-50 p-6 rounded-2xl border border-slate-100">
-                    <p className="font-bold text-slate-800 mb-4">{q.label}</p>
-                    <div className="flex flex-wrap gap-2 md:gap-4">
-                      {[5, 4, 3, 2, 1].map(score => (
-                        <label key={score} className={`flex-1 flex flex-col items-center justify-center p-3 rounded-xl border cursor-pointer transition-all ${systemFeedback[q.key] === score ? 'bg-indigo-50 border-indigo-500 text-indigo-700 shadow-sm scale-105' : 'bg-white border-slate-200 text-slate-500 hover:border-indigo-300'}`}>
-                          <input type="radio" name={q.key} value={score} checked={systemFeedback[q.key] === score} onChange={() => setSystemFeedback({ ...systemFeedback, [q.key]: score })} className="hidden" />
-                          <span className="text-xl font-black mb-1">{score}</span>
-                          <span className="text-[10px] text-center">
-                            {score === 5 ? 'ดีมาก' : score === 4 ? 'ดี' : score === 3 ? 'ปานกลาง' : score === 2 ? 'พอใช้' : 'ปรับปรุง'}
-                          </span>
-                        </label>
-                      ))}
-                    </div>
+        {
+          activeTab === 'feedback' && (
+            <div className="max-w-4xl mx-auto space-y-8 animate-in slide-in-from-bottom-5 duration-500 font-serif">
+              <div className="bg-white p-10 rounded-3xl border border-slate-200 shadow-sm">
+                <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-8 border-b pb-6 gap-6">
+                  <div>
+                    <h2 className="text-2xl font-black text-indigo-900 uppercase flex items-center gap-3"><Star /> ๗. ประเมินการใช้งานระบบ</h2>
+                    <p className="text-xs text-slate-400 mt-2 font-bold uppercase tracking-widest italic">ความคิดเห็นของคุณช่วยให้เราพัฒนาระบบให้ดียิ่งขึ้น</p>
                   </div>
-                ))}
-
-                <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100">
-                  <p className="font-bold text-slate-800 mb-4 flex items-center gap-2"><MessageSquare size={18} /> ข้อเสนอแนะเพิ่มเติมเพื่อการพัฒนา</p>
-                  <textarea
-                    className="w-full border border-slate-200 rounded-xl p-4 text-sm focus:ring-2 focus:ring-indigo-500 outline-none shadow-inner"
-                    rows="4"
-                    placeholder="พิมพ์ข้อเสนอแนะ ปัญหาที่พบ หรือฟีเจอร์ที่อยากให้มีเพิ่มเติม..."
-                    value={systemFeedback.suggestion}
-                    onChange={e => setSystemFeedback({ ...systemFeedback, suggestion: e.target.value })}
-                  ></textarea>
                 </div>
-              </div>
 
-              <div className="flex justify-end">
-                <button onClick={submitFeedback} disabled={isSubmittingFeedback} className="bg-indigo-600 text-white px-8 py-4 rounded-2xl font-black text-sm hover:bg-indigo-700 shadow-lg active:scale-95 transition-all flex items-center gap-3 disabled:bg-slate-300">
-                  {isSubmittingFeedback ? <Loader2 className="animate-spin" size={20} /> : <Sparkles size={20} />} บันทึกการประเมิน
-                </button>
+                <div className="space-y-6 mb-8">
+                  {[
+                    { key: 'ux', label: '1. ความสะดวกและง่ายต่อการใช้งานระบบ (UX/UI)' },
+                    { key: 'ai', label: '2. ความแม่นยำและคุณภาพของ AI ในการวิเคราะห์งาน' },
+                    { key: 'speed', label: '3. ความรวดเร็วในการทำงานและประมวลผล' },
+                    { key: 'reports', label: '4. ความถูกต้องและครบถ้วนของรูปแบบรายงานที่ได้ (ฝอ.1, ฝอ.2, แบบประเมิน)' },
+                    { key: 'overall', label: '5. ประโยชน์ภาพรวมที่ได้รับจากการใช้งานระบบนี้' }
+                  ].map((q, idx) => (
+                    <div key={q.key} className="bg-slate-50 p-6 rounded-2xl border border-slate-100">
+                      <p className="font-bold text-slate-800 mb-4">{q.label}</p>
+                      <div className="flex flex-wrap gap-2 md:gap-4">
+                        {[5, 4, 3, 2, 1].map(score => (
+                          <label key={score} className={`flex-1 flex flex-col items-center justify-center p-3 rounded-xl border cursor-pointer transition-all ${systemFeedback[q.key] === score ? 'bg-indigo-50 border-indigo-500 text-indigo-700 shadow-sm scale-105' : 'bg-white border-slate-200 text-slate-500 hover:border-indigo-300'}`}>
+                            <input type="radio" name={q.key} value={score} checked={systemFeedback[q.key] === score} onChange={() => setSystemFeedback({ ...systemFeedback, [q.key]: score })} className="hidden" />
+                            <span className="text-xl font-black mb-1">{score}</span>
+                            <span className="text-[10px] text-center">
+                              {score === 5 ? 'ดีมาก' : score === 4 ? 'ดี' : score === 3 ? 'ปานกลาง' : score === 2 ? 'พอใช้' : 'ปรับปรุง'}
+                            </span>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+
+                  <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100">
+                    <p className="font-bold text-slate-800 mb-4 flex items-center gap-2"><MessageSquare size={18} /> ข้อเสนอแนะเพิ่มเติมเพื่อการพัฒนา</p>
+                    <textarea
+                      className="w-full border border-slate-200 rounded-xl p-4 text-sm focus:ring-2 focus:ring-indigo-500 outline-none shadow-inner"
+                      rows="4"
+                      placeholder="พิมพ์ข้อเสนอแนะ ปัญหาที่พบ หรือฟีเจอร์ที่อยากให้มีเพิ่มเติม..."
+                      value={systemFeedback.suggestion}
+                      onChange={e => setSystemFeedback({ ...systemFeedback, suggestion: e.target.value })}
+                    ></textarea>
+                  </div>
+                </div>
+
+                <div className="flex justify-end">
+                  <button onClick={submitFeedback} disabled={isSubmittingFeedback} className="bg-indigo-600 text-white px-8 py-4 rounded-2xl font-black text-sm hover:bg-indigo-700 shadow-lg active:scale-95 transition-all flex items-center gap-3 disabled:bg-slate-300">
+                    {isSubmittingFeedback ? <Loader2 className="animate-spin" size={20} /> : <Sparkles size={20} />} บันทึกการประเมิน
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
-        )}
-      </main>
+          )
+        }
+      </main >
 
       <footer className={`text-center text-[10px] py-8 border-t mt-8 pb-24 lg:pb-8 font-serif transition-colors duration-500 ${activeTab === 'cloud' ? 'bg-slate-900 border-slate-800 text-slate-400' : 'bg-white border-slate-200 text-slate-500'}`}>
         <p className="font-bold">© 2026 สุกฤษฏิ์พล โชติอรรฐพล. All Rights Reserved.</p>
@@ -3205,7 +3236,7 @@ const App = () => {
         .hide-scrollbar::-webkit-scrollbar { display: none; }
         .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
       `}} />
-    </div>
+    </div >
   );
 };
 
