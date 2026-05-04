@@ -1097,7 +1097,80 @@ const App = () => {
       setWorkplaceMainTasks(prev => prev.map(t => t.id === taskId ? { ...t, isAnalyzing: false } : t));
     }
   };
+const analyzeSingleWorkplaceSubtask = async (mIdx, sIdx) => {
+    const activeKey = config.aiProvider === 'openai' ? config.openaiApiKey : config.aiProvider === 'claude' ? config.claudeApiKey : config.aiProvider === 'deepseek' ? config.deepseekApiKey : (config.userApiKey || apiKey);
+    if (!activeKey?.trim() && config.aiProvider !== 'gemini') return showStatus(`กรุณาใส่ API Key ของ ${config.aiProvider} ในหน้า '๑. ตั้งค่า' ก่อนใช้งาน`);
+    if (config.aiProvider === 'gemini' && !config.userApiKey?.trim() && !apiKey) return showStatus("กรุณาใส่ Gemini API Key ในหน้า '๑. ตั้งค่า' ก่อนใช้งาน");
 
+    const mainTask = workplaceMainTasks[mIdx];
+    const subTask = mainTask.subTasks[sIdx];
+    if (!subTask.workplaceName) return showStatus("กรุณาระบุชื่องานย่อยก่อนวิเคราะห์ขั้นตอน");
+
+    // เปิดโหมดโหลดหมุนๆ เฉพาะปุ่มของงานย่อยนี้
+    setWorkplaceMainTasks(prev => {
+      const next = [...prev];
+      next[mIdx].subTasks[sIdx].isAnalyzing = true;
+      return next;
+    });
+
+    const analyzed = subjectsRef.current.filter(s => s.isAnalyzed);
+    const pool = analyzed.flatMap(s => (s.mainTasks || []).flatMap(mt => mt.subTasks || []));
+
+    try {
+      const systemPrompt = `วิเคราะห์งานย่อย: "${subTask.workplaceName}" (ซึ่งเป็นส่วนหนึ่งของงานหลัก: "${mainTask.name}")
+      หน้าที่ของคุณคือเขียน "ขั้นตอนการปฏิบัติงาน" (Performance Steps) ให้ละเอียดและครบถ้วนที่สุดตามลำดับการทำงานจริง (ประมาณ 3-7 ขั้นตอน) พร้อมกำหนดจุดประสงค์ K,S,A,Ap
+      ${pool.length > 0 ? `**สำคัญมาก (การจับคู่รหัส Mapping ด้วยลักษณะงาน)**: นำ "ขั้นตอนการปฏิบัติงาน" มาพิจารณาเปรียบเทียบกับพูลสมรรถนะวิชา: ${JSON.stringify(pool.map(t => ({ id: t.id, name: t.name })))}
+      - หาก "ขั้นตอนการปฏิบัติงาน (step)" ใด มีลักษณะคล้ายคลึงกับงานใดในพูลวิชา ให้ระบุรหัสนั้นลงใน \`subjectTaskId\` ของขั้นตอนนั้นๆ ทันที
+      - ต้องตอบเป็นรหัสงานย่อยตามข้อมูลในพูลวิชาเท่านั้น (เช่น A1-1 หรือ B2-2) ห้ามตอบรหัสงานหลักกว้างๆ` : `ไม่มีข้อมูลพูลสมรรถนะ ให้สร้างรหัส Mapping สมมติขึ้นมาเอง`}
+      - กำหนดระดับ (1-3) K,S,A,Ap ตามมาตรฐาน v5.0
+      - การเขียน "จุดประสงค์เชิงพฤติกรรม" (objectives) สำหรับ K, S, A, Ap ต้องใช้ "คำกริยาที่วัดผลได้" ห้ามใช้คำว่า รู้จัก, เข้าใจ, ทราบ, รู้
+      - ชื่องานย่อย/ขั้นตอน ต้องขึ้นต้นด้วยคำกริยา ห้ามมีคำว่า "การ", "ความ", "ศึกษา", "เรียนรู้", "ทฤษฎี" และห้ามเป็นสถานที่
+      - งานปฏิบัติการ ต้องมีขั้นตอนแรกคือ "จัดเตรียมเครื่องมือ/วัตถุดิบ" และขั้นตอนสุดท้ายคือ "จัดเก็บและทำความสะอาด" เสมอ
+      - ระบุ "สื่อ/อุปกรณ์" (equipment) ที่ต้องใช้ในแต่ละขั้นตอน`;
+
+      const generationConfig = {
+        responseSchema: {
+          type: "OBJECT",
+          properties: {
+            detailed_steps: {
+              type: "ARRAY",
+              items: {
+                type: "OBJECT",
+                properties: {
+                  subjectTaskId: { type: "STRING" },
+                  step_text: { type: "STRING" },
+                  objectives: { type: "OBJECT", properties: { k: { type: "STRING" }, s: { type: "STRING" }, a: { type: "STRING" }, ap: { type: "STRING" } } },
+                  levels: { type: "OBJECT", properties: { k: { type: "INTEGER" }, s: { type: "INTEGER" }, a: { type: "INTEGER" }, ap: { type: "INTEGER" } } },
+                  equipment: { type: "STRING" }
+                }
+              }
+            }
+          }
+        }
+      };
+
+      const result = await callAI({ contents: [{ parts: [{ text: `วิเคราะห์ขั้นตอนปฏิบัติงานและจุดประสงค์สำหรับงานย่อย: ${subTask.workplaceName}` }] }], systemInstruction: { parts: [{ text: systemPrompt }] }, generationConfig });
+
+      setWorkplaceMainTasks(prev => {
+        const next = [...prev];
+        // นำขั้นตอนใหม่ที่ AI คิดมาใส่แทนที่เดิมทั้งหมด
+        next[mIdx].subTasks[sIdx].detailed_steps = (result.detailed_steps || []).map(step => ({
+          ...step,
+          subjectTaskId: extractValidTaskIds(step.subjectTaskId)
+        }));
+        next[mIdx].subTasks[sIdx].isAnalyzing = false;
+        return next;
+      });
+      showStatus("วิเคราะห์จุดประสงค์และขั้นตอนของงานย่อยสำเร็จ");
+    } catch (e) {
+      showStatus("ขัดข้อง: " + e.message);
+      setWorkplaceMainTasks(prev => {
+        const next = [...prev];
+        next[mIdx].subTasks[sIdx].isAnalyzing = false;
+        return next;
+      });
+    }
+  };
   const updateWorkplaceSubtask = (mIdx, sIdx, field, value) => setWorkplaceMainTasks(prev => { const next = [...prev]; next[mIdx].subTasks[sIdx][field] = value; return next; });
   const removeWorkplaceSubtask = (mIdx, sIdx) => { if (!window.confirm("ต้องการลบงานย่อยนี้ใช่หรือไม่?")) return; setWorkplaceMainTasks(prev => { const next = [...prev]; next[mIdx].subTasks.splice(sIdx, 1); return next; }); };
   const addWorkplaceSubtaskLocal = (mIdx) => {
