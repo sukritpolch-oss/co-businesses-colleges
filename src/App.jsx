@@ -2764,20 +2764,32 @@ const App = () => {
             )}
 
             {/* พื้นที่สำหรับสร้างเอกสาร แบบนิเทศติดตามประเมินผล (ตามรายวิชา) */}
-            {/* แก้ไขเงื่อนไขให้เปิดสิทธิ์ตามบทบาทผู้ใช้ และยกเว้นเฉพาะครูฝึกในสถานประกอบการเท่านั้น */}
-            {activeEvalView === 'eval_supervision' && currentUserRole !== 'ครูฝึกในสถานประกอบการ' && (
+            {activeEvalView === 'eval_supervision' && ['ครู', 'ผู้บริหาร', 'เจ้าหน้าที่', 'ศึกษานิเทศก์', 'admin'].includes(currentUserRole) && (
               <div id="dve-supervision-area" className="font-serif">
-                {/* เนื้อหาตารางนิเทศติดตามเดิมของคุณครูทั้งหมด (ไม่ต้องลบส่วนที่ Map วิชาออกนะครับ) */}
                 {subjects.filter(s => s.isAnalyzed).map(sub => {
-                  const allSubTasks = sub.mainTasks?.flatMap(mt => mt.subTasks || []) || [];
+                  // 1. ดึงงานย่อยอย่างปลอดภัย ป้องกันจอขาวจากค่า null
+                  const allSubTasks = (sub.mainTasks || []).flatMap(mt => mt?.subTasks || []);
+                  
+                  // 2. ดึงรหัสที่จับคู่ ทั้งจากงานหลักและงานย่อย (Step) มาประมวลผล
                   const mappedTasksForThisSubject = allSubTasks.filter(st => {
+                    if (!st || !st.id) return false;
                     return workplaceTasksFlat.some(wt => {
-                      const wIds = String(wt.id || '').split(',').map(i => i.trim().toUpperCase());
-                      const stepIds = (wt.detailed_steps || []).flatMap(step => String(step.subjectTaskId || '').split(',').map(i => i.trim().toUpperCase()));
-                      const allTargetIds = [...wIds, ...stepIds];
-                      return allTargetIds.includes(String(st.id).trim().toUpperCase());
+                      let allTargetIds = [];
+                      if (wt?.id) allTargetIds.push(...String(wt.id).split(','));
+                      if (wt?.detailed_steps && Array.isArray(wt.detailed_steps)) {
+                        wt.detailed_steps.forEach(step => {
+                          if (step?.subjectTaskId) allTargetIds.push(...String(step.subjectTaskId).split(','));
+                        });
+                      }
+                      const cleanTargetIds = allTargetIds.map(i => String(i).trim().toUpperCase());
+                      return cleanTargetIds.includes(String(st.id).trim().toUpperCase());
                     });
                   });
+
+                  let colCount = 4; // checklist
+                  if (evalFormType === '5') colCount = 7;
+                  if (evalFormType === '4') colCount = 6;
+                  if (evalFormType === '3') colCount = 5;
 
                   return (
                     <div key={`supervision-${sub.id}`} className="page-break mb-20 font-serif">
