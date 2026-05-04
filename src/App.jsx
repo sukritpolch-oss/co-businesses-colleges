@@ -240,7 +240,7 @@ const App = () => {
       setShowWelcomeModal(true);
       return showStatus('ยินดีต้อนรับเข้าสู่ระบบผู้ดูแล (Admin Panel)');
     }
-    
+
     if (isLoadingData) return setLoginError('ระบบกำลังโหลดฐานข้อมูล กรุณารอสักครู่...');
 
     const inputEmail = String(authData.email || '').trim().toLowerCase();
@@ -1240,6 +1240,17 @@ const App = () => {
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url; link.download = filename + '.doc'; link.click();
+  };
+  const formatNumberedText = (text) => {
+    if (!text) return '................................................................................................\n................................................................................................';
+    // แยกข้อความเมื่อเจอตัวเลข 1-2 หลักที่ตามด้วยจุด (เช่น 1., 2., 10.) เพื่อบังคับขึ้นบรรทัดใหม่
+    const parts = text.split(/(?=\d{1,2}\.)/g).filter(p => p.trim());
+    if (parts.length <= 1) return <div className="whitespace-pre-line">{text}</div>;
+    return (
+      <div className="space-y-1.5 mt-1">
+        {parts.map((part, index) => <div key={index} className="text-left">{part.trim()}</div>)}
+      </div>
+    );
   };
 
   // ค้นหา const setupFields = [ ... ]; และเปลี่ยนเป็นแบบนี้:
@@ -2283,15 +2294,24 @@ const App = () => {
                       workplaceMainTasks.forEach((mt, mIdx) => {
                         rightList.push({ level: 0, text: `${mIdx + 1}. ${cleanTaskName(mt.name)}` });
                         (mt.subTasks || []).forEach((st, sIdx) => {
+                          // ดึงรหัสทั้งจากตัวงานย่อย และขั้นตอนย่อยๆ (Steps) มารวมกัน
+                          let allIds = [];
+                          if (st.id) allIds.push(...String(st.id).split(','));
+                          if (st.detailed_steps) {
+                            st.detailed_steps.forEach(step => {
+                              if (step.subjectTaskId) allIds.push(...String(step.subjectTaskId).split(','));
+                            });
+                          }
+                          const uniqueIds = [...new Set(allIds.map(i => i.trim().toUpperCase()))].filter(Boolean).join(', ');
+
                           rightList.push({
                             level: 1,
                             text: `${mIdx + 1}.${sIdx + 1} ${cleanTaskName(st.workplaceName)}`,
                             hours: st.hours,
-                            mappedSubjectId: st.id
+                            mappedSubjectId: uniqueIds
                           });
                         });
                       });
-
                       const maxRows = Math.max(leftList.length, rightList.length);
                       const activeSubjects = subjects.filter(s => s.isAnalyzed);
 
@@ -2385,23 +2405,23 @@ const App = () => {
                       <div className="space-y-4 text-[12pt] leading-relaxed text-left">
                         <div>
                           <p className="font-bold bg-slate-100 inline-block px-2">อ้างอิงมาตรฐาน</p>
-                          <div className="pl-6 mt-1 whitespace-pre-line">{sub.standards || '................................................................................................\n................................................................................................'}</div>
+                          <div className="pl-6">{formatNumberedText(sub.standards)}</div>
                         </div>
                         <div>
                           <p className="font-bold bg-slate-100 inline-block px-2">ผลลัพธ์การเรียนรู้ระดับรายวิชา</p>
-                          <div className="pl-6 mt-1 whitespace-pre-line">{sub.learningOutcomes || '................................................................................................\n................................................................................................'}</div>
+                          <div className="pl-6">{formatNumberedText(sub.learningOutcomes)}</div>
                         </div>
                         <div>
                           <p className="font-bold bg-slate-100 inline-block px-2">จุดประสงค์รายวิชา</p>
-                          <div className="pl-6 mt-1 whitespace-pre-line">{sub.objectives || '................................................................................................\n................................................................................................'}</div>
+                          <div className="pl-6">{formatNumberedText(sub.objectives)}</div>
                         </div>
                         <div>
                           <p className="font-bold bg-slate-100 inline-block px-2">สมรรถนะรายวิชา</p>
-                          <div className="pl-6 mt-1 whitespace-pre-line">{sub.competencies || '................................................................................................\n................................................................................................'}</div>
+                          <div className="pl-6">{formatNumberedText(sub.competencies)}</div>
                         </div>
                         <div>
                           <p className="font-bold bg-slate-100 inline-block px-2">คำอธิบายรายวิชา</p>
-                          <div className="pl-6 mt-1 whitespace-pre-line">{sub.description || '................................................................................................\n................................................................................................'}</div>
+                          <div className="pl-6">{formatNumberedText(sub.description)}</div>
                         </div>
                       </div>
                     </div>
@@ -2750,12 +2770,14 @@ const App = () => {
                 {/* เนื้อหาตารางนิเทศติดตามเดิมของคุณครูทั้งหมด (ไม่ต้องลบส่วนที่ Map วิชาออกนะครับ) */}
                 {subjects.filter(s => s.isAnalyzed).map(sub => {
                   const allSubTasks = sub.mainTasks?.flatMap(mt => mt.subTasks || []) || [];
-                  const mappedTasksForThisSubject = allSubTasks.filter(st => workplaceTasksFlat.some(wt => wt.id === st.id));
-
-                  let colCount = 4; // checklist
-                  if (evalFormType === '5') colCount = 7;
-                  if (evalFormType === '4') colCount = 6;
-                  if (evalFormType === '3') colCount = 5;
+                  const mappedTasksForThisSubject = allSubTasks.filter(st => {
+                    return workplaceTasksFlat.some(wt => {
+                      const wIds = String(wt.id || '').split(',').map(i => i.trim().toUpperCase());
+                      const stepIds = (wt.detailed_steps || []).flatMap(step => String(step.subjectTaskId || '').split(',').map(i => i.trim().toUpperCase()));
+                      const allTargetIds = [...wIds, ...stepIds];
+                      return allTargetIds.includes(String(st.id).trim().toUpperCase());
+                    });
+                  });
 
                   return (
                     <div key={`supervision-${sub.id}`} className="page-break mb-20 font-serif">
@@ -2973,7 +2995,25 @@ const App = () => {
                               </tr>
                             );
                           })()}
-
+                          {unmappedTasksForThisSubject.length > 0 && (
+                            <>
+                              <tr className="bg-red-50">
+                                <td colSpan="10" className="border border-black p-2 font-bold text-left text-red-800">
+                                  สมรรถนะที่จัดการเรียนการสอนเพิ่มเติม (ไม่สอดคล้องกับสถานประกอบการ)
+                                </td>
+                              </tr>
+                              {unmappedTasksForThisSubject.map((st) => (
+                                <tr key={`unmap-${st.id}`} className="align-top bg-red-50/30">
+                                  <td className="border border-black p-2 pl-4 text-left font-serif opacity-70">
+                                    <span className="font-bold">{st.id}</span> {cleanTaskName(st.name)}
+                                  </td>
+                                  <td colSpan="9" className="border border-black p-2 text-center text-red-600 text-[9pt] italic align-middle">
+                                    * จัดการเรียนการสอนและประเมินผลเพิ่มเติม ณ สถานศึกษา
+                                  </td>
+                                </tr>
+                              ))}
+                            </>
+                          )}
                           {/* ส่วนที่ 2 ด้านกิจนิสัย */}
                           <tr className="bg-blue-100/30">
                             <td colSpan="10" className="border border-black p-2 font-bold pl-6">ส่วนที่ 2 ด้านกิจนิสัย</td>
@@ -3010,27 +3050,27 @@ const App = () => {
                       </table>
 
                       <div className="flex justify-between mt-12 text-[14pt] px-10">
-                          <div className="text-center">
-                            <p className="mb-6">ลงชื่อ..................................................................</p>
-                            <p>(..............................................................)</p>
-                            <p>ผู้รับการประเมิน</p>
-                          </div>
-                          <div className="text-center">
-                            <p className="mb-6">ลงชื่อ..................................................................</p>
-                            <p>({config.trainerName || '..............................................................'})</p>
-                            <p>ผู้ประเมิน</p>
-                          </div>
+                        <div className="text-center">
+                          <p className="mb-6">ลงชื่อ..................................................................</p>
+                          <p>(..............................................................)</p>
+                          <p>ผู้รับการประเมิน</p>
+                        </div>
+                        <div className="text-center">
+                          <p className="mb-6">ลงชื่อ..................................................................</p>
+                          <p>({config.trainerName || '..............................................................'})</p>
+                          <p>ผู้ประเมิน</p>
                         </div>
                       </div>
-                    ); // ปิดส่วน return ของการ map()
-                  })}
-                </div> // ปิด div id="dve-11-02-area"
-              )} 
-            </div> 
-            )} 
+                    </div>
+                  ); // ปิดส่วน return ของการ map()
+                })}
+              </div> // ปิด div id="dve-11-02-area"
+            )}
+          </div>
+        )}
 
-  {/* SHARE TAB (แชร์แผนฝึก) */}
-  {activeTab === 'share' && (
+        {/* SHARE TAB (แชร์แผนฝึก) */}
+        {activeTab === 'share' && (
           <div className="max-w-6xl mx-auto space-y-8 animate-in slide-in-from-bottom-5 duration-500 font-serif">
             <div className="bg-indigo-600 p-8 rounded-3xl text-white shadow-xl flex flex-col md:flex-row justify-between items-center gap-6">
               <div className="flex-1 space-y-2">
