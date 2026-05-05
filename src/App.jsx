@@ -455,12 +455,24 @@ localStorage.setItem('dve_auth_session', JSON.stringify({
 
   const generateFileName = (conf) => {
     let filenameParts = [];
-    if (conf.occupation && conf.occupation.trim() !== '') filenameParts.push(conf.occupation.trim());
-    else if (conf.companyName && conf.companyName.trim() !== '') filenameParts.push(conf.companyName.trim());
+    
+    // ดึงชื่อวิทยาลัย
+    if (conf.collegeName && conf.collegeName.trim() !== '') filenameParts.push(conf.collegeName.trim());
+    
+    // ดึงชื่อสถานประกอบการ
+    if (conf.companyName && conf.companyName.trim() !== '') filenameParts.push(conf.companyName.trim());
+    
+    // ดึงแผนกวิชา
+    if (conf.fieldOfStudy && conf.fieldOfStudy.trim() !== '') filenameParts.push(conf.fieldOfStudy.trim());
 
-    let baseName = `Workplace_${new Date().getTime()}`;
-    if (filenameParts.length > 0) baseName = filenameParts.join('_').replace(/[/\\?%*:|"<>]/g, '-');
-    return `ทวิภาคี_${baseName}.dvedata`;
+    if (filenameParts.length > 0) {
+      // นำส่วนประกอบมาต่อกันด้วยเครื่องหมาย + และกรองอักขระที่ห้ามตั้งเป็นชื่อไฟล์ออก
+      let baseName = filenameParts.join('+').replace(/[/\\?%*:|"<>]/g, '-');
+      return `DVE+${baseName}.dvedata`;
+    } else {
+      // กรณีไม่ได้กรอกข้อมูลอะไรเลย
+      return `DVE+Workplace_${new Date().getTime()}.dvedata`;
+    }
   };
 
   const saveDataLocally = () => {
