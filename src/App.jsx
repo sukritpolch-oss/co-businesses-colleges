@@ -466,12 +466,12 @@ localStorage.setItem('dve_auth_session', JSON.stringify({
     if (conf.fieldOfStudy && conf.fieldOfStudy.trim() !== '') filenameParts.push(conf.fieldOfStudy.trim());
 
     if (filenameParts.length > 0) {
-      // นำส่วนประกอบมาต่อกันด้วยเครื่องหมาย + และกรองอักขระที่ห้ามตั้งเป็นชื่อไฟล์ออก
-      let baseName = filenameParts.join('+').replace(/[/\\?%*:|"<>]/g, '-');
+      // นำส่วนประกอบมาต่อกันด้วยเครื่องหมาย _ และกรองอักขระที่ห้ามตั้งเป็นชื่อไฟล์ออก
+      let baseName = filenameParts.join('_').replace(/[/\\?%*:|"<>]/g, '-');
       return `DVE+${baseName}.dvedata`;
     } else {
       // กรณีไม่ได้กรอกข้อมูลอะไรเลย
-      return `DVE+Workplace_${new Date().getTime()}.dvedata`;
+      return `DVE_Workplace_${new Date().getTime()}.dvedata`;
     }
   };
 
