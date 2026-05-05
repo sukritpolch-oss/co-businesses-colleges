@@ -2554,7 +2554,7 @@ const App = () => {
                           <p>ผู้เข้ารับการฝึกระบบทวิภาคี วิทยาลัย {config.collegeName || '................'} ระดับชั้น {config.level || '................'}</p>
                           <p>อาชีพ / ตำแหน่งงานที่ฝึก {config.occupation || '................'}</p>
                           <p className="mt-2 font-bold font-serif">งานหลัก {task.mainTaskIndex}. {cleanTaskName(task.parentMainTaskName) || '................'}</p>
-                          <p className="font-bold text-indigo-700 font-serif">งานย่อย {task.subTaskIndex}. {cleanTaskName(task.workplaceName) || '................'} เวลาฝึก: {Number((task.hours / (config.hoursPerDay || 8)).toFixed(1))} วัน ({task.hours} ชั่วโมง)</p>
+                          <p className="font-bold text-indigo-700 font-serif">งานย่อย {task.subTaskIndex}. {cleanTaskName(task.workplaceName) || '................'} เวลาฝึก: {Number((task.hours / (config.hoursPerDay || 8)).toFixed(1))} วัน /{task.hours} ชั่วโมง</p>
                           {!isWorkplaceTrainer && <p>ผลลัพธ์การเรียนรู้: <span className="font-bold font-serif">{cleanTaskName(task.name) || '................'}</span></p>}                          <p>ชื่อ-สกุล ครูฝึก {config.trainerName || '................'} ตำแหน่ง {config.trainerPosition || '................'}</p>
                         </div>
 
