@@ -617,8 +617,6 @@ const App = () => {
       showStatus('รวมข้อมูลวิชาและงานสำเร็จ โดยคงการตั้งค่าของระบบเดิมไว้!');
     }
     
-    setShowDveConflictModal(false); setPendingDveData(null); setEditingCloudId(null);
-  };
     
     setShowDveConflictModal(false); setPendingDveData(null); setEditingCloudId(null);
   };
