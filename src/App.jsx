@@ -1118,7 +1118,7 @@ const App = () => {
 };
   const addWorkplaceMainTask = () => {
     if (workplaceMainTasks.length >= 100) return showStatus("เพิ่มงานหลักได้สูงสุด ๑๐๐ งาน");
-    setWorkplaceMainTasks(prev => [...prev, { id: Date.now(), name: '', isAnalyzing: false, isConfirmed: false, subTasks: [] }]);
+    setWorkplaceMainTasks(prev => [...prev, { id: Date.now() + Math.random(), name: '', isAnalyzing: false, isConfirmed: false, subTasks: [] }]);
   };
 
   const removeWorkplaceMainTask = (id) => setWorkplaceMainTasks(prev => prev.filter(t => t.id !== id));
@@ -1215,38 +1215,68 @@ const App = () => {
 
     try {
       const systemPrompt = `วิเคราะห์งานหลัก: "${taskToAnalyze.name}" 
-      1. แตกเป็น "งานย่อย" 4-6 งาน และสำหรับแต่ละงานย่อย ให้เขียน "ขั้นตอนการปฏิบัติงาน" (Performance Steps) ให้ละเอียดและครบถ้วนที่สุดตามลำดับการทำงานจริง
+      1. แตกเป็น "งานย่อย" 3-5 งาน และสำหรับแต่ละงานย่อย ให้เขียน "ขั้นตอนการปฏิบัติงาน" (Performance Steps) ให้ละเอียดและครบถ้วนที่สุดตามลำดับการทำงานจริง
       ${pool.length > 0 ? `2. **สำคัญมาก (การจับคู่รหัส Mapping ด้วยลักษณะงาน)**: นำ "ภาพรวมงานย่อย" และ "ขั้นตอนการปฏิบัติงาน" มาพิจารณาเปรียบเทียบกับพูลสมรรถนะวิชา: ${JSON.stringify(pool.map(t => ({ id: t.id, name: t.name })))} 
-      - ให้จับคู่โดยพิจารณาจาก "ลักษณะการปฏิบัติงาน" และ "เป้าหมาย/สิ่งที่ถูกกระทำ" ประกอบกันเสมอ (เช่น "เปลี่ยนอุปกรณ์" ต้องคู่กับ "ซ่อม/แก้ไขอุปกรณ์" หรือ "ทำความสะอาด" คู่กับ "บำรุงรักษา") โดยอนุโลมให้กลุ่มคำต่อไปนี้สอดคล้องกัน:
-        * แก้ปัญหา/ซ่อมบำรุง: แก้ไขข้อขัดข้อง, ตรวจซ่อม, ซ่อมบำรุง, ซ่อมแซม, ซ่อม, แก้ปัญหา, แก้ไข, ปรับปรุง, ปรับแต่ง, ปรับตั้ง, เปลี่ยนอุปกรณ์, เปลี่ยนอะไหล่
-        * จัดการ/ตรวจสอบ: ตรวจสอบ, สอบทาน, เช็ค, ตรวจเช็ค, ทดสอบ, วิเคราะห์, จัดการ, บริหาร, คัดแยก, บรรจุ, ควบคุมคุณภาพ
-        * การใช้และดูแลเครื่องมือ: เลือกใช้เครื่องมือ, เลือกเครื่องมือ, ใช้เครื่องมือ, บำรุงรักษา, ทำความสะอาด, ดูแล, เช็ด
-        * วางแผน/สร้างสรรค์: ออกแบบ, วางแผน, วางโครงสร้าง, คิดค้น, ประดิษฐ์, กำหนด
-        * ลงมือทำ/ดำเนินการ: ผลิต, ดำเนินการ, ปฏิบัติ, ประกอบ, ติดตั้ง, จัดทำ, จัดเตรียม, เตรียม, ตัด, เย็บ, ผัด, ปรุง, ตกแต่ง
-        * ส่งเสริม/ขาย: จำหน่าย, ขาย, ประชาสัมพันธ์, โฆษณา, บริการ, ให้คำปรึกษา
+      - ให้จับคู่โดยพิจารณาจาก "ลักษณะการปฏิบัติงานที่คล้ายคลึงกัน"
+      - ให้พิจารณาบริบทของคำที่มีความหมายใกล้เคียงหรือเทียบเท่ากัน เช่น "ปรับแต่ง" = "ปรับตั้ง" หรือ "ปรับ" เพื่อเพิ่มความแม่นยำในการจับคู่
       - หากภาพรวมงานย่อยสอดคล้องกับพูล ให้ระบุรหัสใน \`subjectTaskId\` ของงานย่อย
       - หาก "ขั้นตอนการปฏิบัติงาน (step)" ใด มีลักษณะคล้ายคลึงกับงานใดในพูลวิชา ให้ระบุรหัสนั้นลงใน \`subjectTaskId\` ของขั้นตอนนั้นๆ ทันที
-      - **กฎเหล็กเรื่องรหัส (subjectTaskId)**: ต้องตอบเป็นรหัสงานย่อยตามข้อมูลในพูลวิชาเท่านั้น (เช่น A1-1 หรือ B2-2) **ห้ามตอบรหัสงานหลักแบบกว้างๆ (เช่น A1)** ห้ามมีข้อความอื่นปนมาเด็ดขาด` : `2. ไม่มีข้อมูลพูลสมรรถนะ ให้สร้างรหัส Mapping สมมติขึ้นมาเอง`}
+      - **กฎเหล็กเรื่องรหัส (subjectTaskId)**: ต้องตอบเป็นรูปแบบรหัสสั้นๆ เท่านั้น (เช่น A1-1 หรือ B2-2) ห้ามมีประโยคอธิบาย ห้ามมีข้อความภาษาอังกฤษหรือไทยปนมาเด็ดขาด` : `2. ไม่มีข้อมูลพูลสมรรถนะ ให้สร้างรหัส Mapping สมมติขึ้นมาเอง`}
       3. กำหนดระดับ (1-3) K,S,A,Ap ตามมาตรฐาน v5.0
-      4. การเขียน "จุดประสงค์เชิงพฤติกรรม" (objectives) สำหรับ K, S, A, Ap ต้องใช้ "คำกริยาที่วัดผลได้" ห้ามใช้คำว่า รู้จัก, เข้าใจ, ทราบ, รู้
-      5. **กฎเหล็กการตั้งชื่องาน**: ชื่องานย่อย (\`workplaceName\`) และ ขั้นตอนการปฏิบัติงาน (\`step_text\`) **ต้องเป็นชื่อการปฏิบัติงานและขึ้นต้นด้วยคำกริยา (Action Verb) เสมอ** (เช่น เตรียม, ผัด, ปรุง, จัดตกแต่ง, ประกอบ, ตรวจสอบ, บำรุงรักษา)
-         - **ห้าม** ตั้งชื่องานเป็นสถานที่, พื้นที่, หรือคำนามเฉยๆ เด็ดขาด (เช่น ห้ามตอบ "ห้องครัว", "พื้นที่เตรียมอาหาร", "อุปกรณ์")
-         - **ห้าม** มีคำว่า "การ", "ความ", "ศึกษา", "เรียนรู้", "ทฤษฎี"
-      6. งานปฏิบัติการ ต้องมีขั้นตอนแรกคือ "จัดเตรียมเครื่องมือ/วัตถุดิบ" และขั้นตอนสุดท้ายคือ "จัดเก็บและทำความสะอาด" เสมอ
+      4. **สำคัญมาก (จุดประสงค์)**: การเขียน "จุดประสงค์เชิงพฤติกรรม" (objectives) สำหรับ K, S, A, Ap ต้องใช้ "คำกริยาที่วัดผลได้" ห้ามใช้คำว่า รู้จัก, เข้าใจ, ทราบ, รู้
+      5. **กฎเหล็ก (ชื่องานย่อย/ขั้นตอน)**: ต้องขึ้นต้นด้วยคำกริยาแสดงการกระทำ และห้ามมีคำว่า "การ", "ศึกษา", "เรียนรู้", "ทฤษฎี"
+      6. **กฎเหล็กเพิ่มเติม (งานปฏิบัติการ)**: หากเป็นลักษณะงานช่างหรืองานวิชาชีพ (เช่น ถอด, ประกอบ, ติดตั้ง, ซ่อม, เช็ค, ตรวจสอบ) **ต้องกำหนดขั้นตอนแรกเป็นการ "จัดเตรียมเครื่องมือและอุปกรณ์" และขั้นตอนสุดท้ายเป็นการ "จัดเก็บเครื่องมือและทำความสะอาด" เสมอ**
       7. ระบุ "สื่อ/อุปกรณ์" (equipment) ที่ต้องใช้ในแต่ละขั้นตอน`;
-      const generationConfig = { responseSchema: { type: "OBJECT", properties: { subTasks: { type: "ARRAY", items: { type: "OBJECT", properties: { subjectTaskId: { type: "STRING" }, workplaceName: { type: "STRING" }, detailed_steps: { type: "ARRAY", items: { type: "OBJECT", properties: { subjectTaskId: { type: "STRING" }, step_text: { type: "STRING" }, objectives: { type: "OBJECT", properties: { k: { type: "STRING" }, s: { type: "STRING" }, a: { type: "STRING" }, ap: { type: "STRING" } } }, levels: { type: "OBJECT", properties: { k: { type: "INTEGER" }, s: { type: "INTEGER" }, a: { type: "INTEGER" }, ap: { type: "INTEGER" } } }, equipment: { type: "STRING" } } } } } } } } } };
+
+      const generationConfig = {
+        responseSchema: {
+          type: "OBJECT",
+          properties: {
+            subTasks: {
+              type: "ARRAY",
+              items: {
+                type: "OBJECT",
+                properties: {
+                  subjectTaskId: { type: "STRING" }, workplaceName: { type: "STRING" },
+                  detailed_steps: {
+                    type: "ARRAY",
+                    items: {
+                      type: "OBJECT",
+                      properties: {
+                        subjectTaskId: { type: "STRING" },
+                        step_text: { type: "STRING" },
+                        objectives: {
+                          type: "OBJECT", properties: { k: { type: "STRING" }, s: { type: "STRING" }, a: { type: "STRING" }, ap: { type: "STRING" } }
+                        },
+                        levels: {
+                          type: "OBJECT", properties: { k: { type: "INTEGER" }, s: { type: "INTEGER" }, a: { type: "INTEGER" }, ap: { type: "INTEGER" } }
+                        },
+                        equipment: { type: "STRING" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      };
 
       const result = await callAI({ contents: [{ parts: [{ text: `วิเคราะห์งานปฏิบัติสำหรับ: ${taskToAnalyze.name}` }] }], systemInstruction: { parts: [{ text: systemPrompt }] }, generationConfig });
 
       const newSubTasks = (result.subTasks || []).map((st, i) => {
         const safeSubTaskId = extractValidTaskIds(st.subjectTaskId);
         return {
-          ...st, id: safeSubTaskId || `W${tIdx}-${i + 1}`,
+          ...st,
+          id: safeSubTaskId || `W${tIdx}-${i + 1}`,
           name: cleanTaskName(pool.find(p => p.id === safeSubTaskId)?.name || st.workplaceName),
           workplaceName: cleanTaskName(st.workplaceName),
           subjectId: safeSubTaskId ? safeSubTaskId.split('-')[0] : 'W',
           hours: 10,
-          detailed_steps: (st.detailed_steps || []).map(step => ({ ...step, subjectTaskId: extractValidTaskIds(step.subjectTaskId) }))
+          detailed_steps: (st.detailed_steps || []).map(step => ({
+            ...step,
+            subjectTaskId: extractValidTaskIds(step.subjectTaskId)
+          }))
         };
       });
 
@@ -1254,6 +1284,7 @@ const App = () => {
       showStatus("วิเคราะห์งานสถานประกอบการสำเร็จ");
     } catch (e) {
       showStatus("ขัดข้อง: " + e.message);
+      // เปลี่ยนวิธีการอัปเดต State ตรงนี้เพื่อไม่ให้จอขาวเวลา AI ทำงานล้มเหลว
       setWorkplaceMainTasks(prev => prev.map(t => t.id === taskId ? { ...t, isAnalyzing: false } : t));
     }
   };
