@@ -741,6 +741,108 @@ const App = () => {
       if (!parsed) try { parsed = JSON.parse(decodeUTF8(rawText)); } catch (_) { }
 
       if (parsed && (parsed.config || parsed.subjects || parsed.workplaceMainTasks)) {
+        // 🔴 แก้ไขจุดบั๊ก: เช็คให้ครบว่าหน้าจอมี 'งานบริษัท' หรือ 'วิชา' อย่างใดอย่างหนึ่งอยู่แล้วหรือไม่
+        const currentHasWorkplace = workplaceMainTasks.length > 0 && workplaceMainTasks.some(t => t.name !== '');
+        const currentHasSubjects = subjectsRef.current.some(s => s.isAnalyzed || s.name?.trim() || s.description?.trim() || (s.mainTasks && s.mainTasks.length > 0));
+        const currentHasData = currentHasWorkplace || currentHasSubjects;
+
+        const incomingHasWorkplace = parsed.workplaceMainTasks && parsed.workplaceMainTasks.length > 0 && parsed.workplaceMainTasks.some(t => t.name !== '');
+        const incomingHasSubjects = parsed.subjects && parsed.subjects.some(s => s.isAnalyzed || s.name?.trim() || s.description?.trim() || (s.mainTasks && s.mainTasks.length > 0));
+        const incomingHasData = incomingHasWorkplace || incomingHasSubjects;
+
+        if (currentHasData && incomingHasData) {
+          setPendingDveData(parsed); setShowDveConflictModal(true);
+        } else {
+          executeApplyDveData(parsed, 'overwrite');
+        }
+      } else {
+        showStatus('เปิดไฟล์ไม่สำเร็จ: ไฟล์เสียหายหรือไม่พบข้อมูล');
+      }
+      resetInputs();
+    };
+    reader.readAsText(file, 'UTF-8');
+  };
+
+  const handleJobCompanyUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        let rawText = event.target.result;
+        rawText = rawText.replace(/^\uFEFF/, '').trim();
+
+        let parsed = null;
+        const decodeUTF8 = (str) => {
+          try { return decodeURIComponent(escape(atob(str))); }
+          catch (err) { return new TextDecoder().decode(Uint8Array.from(atob(str), c => c.charCodeAt(0))); }
+        };
+
+        try { parsed = JSON.parse(rawText); } catch (_) { }
+        if (!parsed) try { parsed = JSON.parse(decryptPayload(rawText)); } catch (_) { }
+        if (!parsed) try { parsed = JSON.parse(decodeUTF8(rawText)); } catch (_) { }
+
+        let importedTasks = [];
+        if (parsed) {
+          if (Array.isArray(parsed)) importedTasks = parsed;
+          else if (typeof parsed === 'object') {
+            if (parsed.workplaceMainTasks && Array.isArray(parsed.workplaceMainTasks)) importedTasks = parsed.workplaceMainTasks;
+            else if (parsed.data && Array.isArray(parsed.data)) importedTasks = parsed.data;
+            else if (parsed.tasks && Array.isArray(parsed.tasks)) importedTasks = parsed.tasks;
+            else {
+              for (let key in parsed) {
+                if (Array.isArray(parsed[key]) && parsed[key].length > 0) { importedTasks = parsed[key]; break; }
+              }
+            }
+          }
+        } else if (rawText.length > 0 && !rawText.includes('<html')) {
+          let decodedText = rawText;
+          try { decodedText = decodeUTF8(rawText); } catch (_) { }
+          const lines = decodedText.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+          importedTasks = lines.map(line => ({ name: line, subTasks: [] }));
+        }
+
+        if (importedTasks.length > 0) {
+          const normalizedTasks = importedTasks.map(t => (typeof t === 'string' ? { name: t, subTasks: [] } : t));
+          // 🔴 แก้ไขการเช็คว่ามีข้อมูลเดิมอยู่แล้วหรือไม่ ให้ครอบคลุมการมีอยู่ของวิชา
+          const currentHasData = (workplaceMainTasks.length > 0 && workplaceMainTasks.some(t => t.name !== '')) || subjectsRef.current.some(s => s.isAnalyzed || s.name?.trim() || s.description?.trim());
+
+          if (currentHasData) {
+            setPendingDveData(normalizedTasks); setShowDveConflictModal(true);
+          } else {
+            executeApplyDveData(normalizedTasks, 'overwrite');
+          }
+        } else {
+          showStatus('เปิดไฟล์ไม่สำเร็จ: ไม่พบรูปแบบข้อมูลงานที่ระบบรู้จัก');
+        }
+      } catch (err) { showStatus('เกิดข้อผิดพลาดในการอ่านไฟล์'); }
+      if (jobCompanyInputRef.current) jobCompanyInputRef.current.value = '';
+    };
+    reader.readAsText(file, 'UTF-8');
+  };
+
+  const handleFileUploadLocal = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const resetInputs = () => { if (fileInputRef.current) fileInputRef.current.value = ''; if (evalFileInputRef.current) evalFileInputRef.current.value = ''; };
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      let rawText = event.target.result;
+      rawText = rawText.replace(/^\uFEFF/, '').trim();
+
+      let parsed = null;
+      const decodeUTF8 = (str) => {
+        try { return decodeURIComponent(escape(atob(str))); }
+        catch (err) { return new TextDecoder().decode(Uint8Array.from(atob(str), c => c.charCodeAt(0))); }
+      };
+
+      try { parsed = JSON.parse(rawText); } catch (_) { }
+      if (!parsed) try { parsed = JSON.parse(decryptPayload(rawText)); } catch (_) { }
+      if (!parsed) try { parsed = JSON.parse(decodeUTF8(rawText)); } catch (_) { }
+
+      if (parsed && (parsed.config || parsed.subjects || parsed.workplaceMainTasks)) {
         const currentHasData = workplaceMainTasks.length > 0 && workplaceMainTasks.some(t => t.name !== '');
         const incomingHasData = parsed.workplaceMainTasks && parsed.workplaceMainTasks.length > 0 && parsed.workplaceMainTasks.some(t => t.name !== '');
 
