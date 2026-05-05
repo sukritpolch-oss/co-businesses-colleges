@@ -1044,9 +1044,19 @@ const App = () => {
 
   const addSubjectMainTaskLocal = (subIndex) => setSubjects(prev => { const next = [...prev]; if (!next[subIndex].mainTasks) next[subIndex].mainTasks = []; const newId = `${next[subIndex].id}${next[subIndex].mainTasks.length + 1}`; next[subIndex].mainTasks.push({ id: newId, name: '', subTasks: [] }); return next; });
   const removeSubjectMainTaskLocal = (subIndex, mIdx) => { if (!window.confirm("ต้องการลบงานหลักนี้ใช่หรือไม่?")) return; setSubjects(prev => { const next = [...prev]; next[subIndex].mainTasks.splice(mIdx, 1); return next; }); };
-  const addSubjectSubTaskLocal = (subIndex, mIdx) => setSubjects(prev => { const next = [...prev]; if (!next[subIndex].mainTasks[mIdx].subTasks) next[subIndex].mainTasks[mIdx].subTasks = []; const mId = next[subIndex].mainTasks[mIdx].id; const newId = `${mId}-${next[subIndex].mainTasks[mIdx].subTasks.length + 1}`; next[subIndex].mainTasks[mIdx].subTasks.push({ id: newId, name: '' }); return next; });
-  const removeSubjectSubTaskLocal = (subIndex, mIdx, sIdx) => setSubjects(prev => { const next = [...prev]; next[subIndex].mainTasks[mIdx].subTasks.splice(sIdx, 1); return next; });
-
+const clearSubjectLocal = (index) => {
+  if (!window.confirm(`ต้องการล้างข้อมูลรายวิชา ${subjectsRef.current[index].id} ทั้งหมดใช่หรือไม่?`)) return;
+  setSubjects(prev => {
+    const next = [...prev];
+    next[index] = {
+      id: next[index].id, code: '', name: '', credits: '', standards: '', learningOutcomes: '',
+      objectives: '', competencies: '', description: '', mainTasks: [],
+      isAnalyzed: false, previewUrl: null, uploadedFile: null
+    };
+    return next;
+  });
+  showStatus(`ล้างข้อมูลรายวิชาสำเร็จ`);
+};
   const addWorkplaceMainTask = () => {
     if (workplaceMainTasks.length >= 100) return showStatus("เพิ่มงานหลักได้สูงสุด ๑๐๐ งาน");
     setWorkplaceMainTasks(prev => [...prev, { id: Date.now(), name: '', isAnalyzing: false, isConfirmed: false, subTasks: [] }]);
