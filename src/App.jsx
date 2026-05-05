@@ -505,214 +505,75 @@ const App = () => {
       showStatus('คงข้อมูลเดิมบนหน้าจอไว้สำเร็จ!');
     } else if (mode === 'merge') {
       // 1. นำข้อมูลของท่านกับสถานประกอบการรวมกัน
-      if (!isJobCompany && parsedData && parsedData.selectedBehaviors) {
-        setSelectedBehaviors(prev => [...new Set([...prev, ...parsedData.selectedBehaviors])]);
-      }
-
-      let idMapping = {};
-      
-      // 2. นำเข้าวิชา (Subjects) ไม่ให้ลบของเดิม และขยับรหัสวิชาอัตโนมัติหากซ้ำ
-      if (!isJobCompany && parsedData?.subjects && currentUserRole !== 'ครูฝึกในสถานประกอบการ') {
-        setSubjects(prevSubjects => {
-          let currentSubjects = [...prevSubjects];
-          
-          // คัดเฉพาะวิชาที่มีข้อมูล (ไม่เอาช่องว่างเปล่าๆ มาทับ)
-          const incomingActiveSubjects = parsedData.subjects.filter(s => s.isAnalyzed || s.name?.trim() || s.description?.trim() || (s.mainTasks && s.mainTasks.length > 0));
-
-          incomingActiveSubjects.forEach(incSub => {
-            // หาช่องวิชาในระบบปัจจุบันที่ยัง "ว่างอยู่จริงๆ" เพื่อให้ดันวิชาไปต่อท้าย
-            const emptyIndex = currentSubjects.findIndex(s => !s.isAnalyzed && !s.name?.trim() && !s.description?.trim() && !s.uploadedFile && (!s.mainTasks || s.mainTasks.length === 0));
-            
-            const oldId = incSub.id;
-            let newId = oldId;
-
-            if (emptyIndex !== -1) {
-              newId = currentSubjects[emptyIndex].id;
-            } else {
-              newId = getSubjectId(currentSubjects.length);
-            }
-            
-            idMapping[oldId] = newId;
-
-            let shiftedSubject = {
-              ...incSub,
-              id: newId,
-              previewUrl: null,
-              uploadedFile: null,
-              mainTasks: (incSub.mainTasks || []).map(mt => {
-                const newMtId = mt.id ? mt.id.replace(new RegExp(`^${oldId}`), newId) : mt.id;
-                return {
-                  ...mt,
-                  id: newMtId,
-                  subTasks: (mt.subTasks || []).map(st => ({
-                    ...st,
-                    id: st.id ? st.id.replace(new RegExp(`^${oldId}`), newId) : st.id
-                  }))
-                };
-              })
-            };
-
-            if (emptyIndex !== -1) {
-              currentSubjects[emptyIndex] = shiftedSubject;
-            } else {
-              currentSubjects.push(shiftedSubject);
-            }
-          });
-          
-          return currentSubjects;
-        });
-      }
-
-      // 3. แปลงรหัสอ้างอิง
-      const updateMappedIds = (idString) => {
-        if (!idString) return idString;
-        let updatedStr = idString;
-        Object.keys(idMapping).forEach(oldKey => {
-           if (oldKey !== idMapping[oldKey]) {
-             const regex = new RegExp(`\\b${oldKey}(\\d+(?:-\\d+)?)\\b`, 'g');
-             updatedStr = updatedStr.replace(regex, `${idMapping[oldKey]}$1`);
-           }
-        });
-        return updatedStr;
-      };
-
-      const remappedIncomingTasks = newIncomingTasks.map(task => ({
-        ...task,
-        subTasks: task.subTasks.map(sub => ({
-           ...sub,
-           detailed_steps: sub.detailed_steps.map(step => ({
-              ...step,
-              subjectTaskId: updateMappedIds(step.subjectTaskId)
-           }))
-        }))
-      }));
-
-      // 4. ทำการรวมงานสถานประกอบการ
-      let currentTasks = [...workplaceMainTasks];
-      if (currentTasks.length === 1 && !currentTasks[0].name && (!currentTasks[0].subTasks || currentTasks[0].subTasks.length === 0)) currentTasks = [];
-      
-      remappedIncomingTasks.forEach((incTask) => {
-        let taskToAdd = { ...incTask };
-        const matchedMainTask = currentTasks.find(curr => curr.name && cleanTaskName(curr.name) === cleanTaskName(incTask.name));
-        if (matchedMainTask) taskToAdd.name = `${taskToAdd.name} (สอดคล้องกับงานหลัก: ${matchedMainTask.name})`;
-        if (taskToAdd.subTasks) {
-          taskToAdd.subTasks = taskToAdd.subTasks.map((sub) => {
-            let matchedSubName = '';
-            for (const curr of currentTasks) {
-              if (curr.subTasks) {
-                const match = curr.subTasks.find(currSub => currSub.workplaceName && cleanTaskName(currSub.workplaceName) === cleanTaskName(sub.workplaceName));
-                if (match) { matchedSubName = match.workplaceName; break; }
-              }
-            }
-            if (matchedSubName) return { ...sub, workplaceName: `${sub.workplaceName} (สอดคล้องกับงานย่อย: ${matchedSubName})` };
-            return sub;
-          });
-        }
-        currentTasks.push(taskToAdd);
-      });
-      
-      setWorkplaceMainTasks(currentTasks);
-      showStatus('นำเข้าและรวมข้อมูลสำเร็จ! (รักษาข้อมูลเดิมไว้ครบถ้วน)');
-    }
-    
-    setShowDveConflictModal(false); setPendingDveData(null); setEditingCloudId(null);
-  };
-
- const executeApplyDveData = (parsedData, mode) => {
-    const isJobCompany = Array.isArray(parsedData);
-    let incomingTasks = isJobCompany ? parsedData : (parsedData?.workplaceMainTasks || []);
-
-    const newIncomingTasks = incomingTasks.map((t, i) => ({
-      ...t, id: Date.now() + i,
-      subTasks: Array.isArray(t.subTasks) ? t.subTasks.map((st, si) => ({ ...st, id: `W${Date.now().toString().slice(-4)}-${i}-${si}`, detailed_steps: Array.isArray(st.detailed_steps) ? st.detailed_steps.map(step => ({ ...step })) : [] })) : []
-    }));
-
-    if (mode === 'overwrite') {
+      // --- กฎข้อที่ 1: ไม่ทับ Config เดิม นำมาเฉพาะรายการประเมิน ---
       if (!isJobCompany && parsedData) {
-        if (parsedData.config) {
-          setConfig(prev => ({
-            ...parsedData.config,
-            userApiKey: prev.userApiKey, openaiApiKey: prev.openaiApiKey, claudeApiKey: prev.claudeApiKey, deepseekApiKey: prev.deepseekApiKey
-          }));
+        if (parsedData.selectedBehaviors) {
+          setSelectedBehaviors(prev => [...new Set([...prev, ...parsedData.selectedBehaviors])]);
         }
-        if (parsedData.subjects && currentUserRole !== 'ครูฝึกในสถานประกอบการ') {
-          setSubjects(parsedData.subjects.map(s => ({ ...s, previewUrl: null, uploadedFile: null })));
-        }
-        if (parsedData.selectedBehaviors) setSelectedBehaviors(parsedData.selectedBehaviors);
-      }
-      setWorkplaceMainTasks(newIncomingTasks.length > 0 ? newIncomingTasks : [{ id: Date.now(), name: '', isAnalyzing: false, isConfirmed: false, subTasks: [] }]);
-      showStatus('ใช้ข้อมูลจากไฟล์อัปโหลดสำเร็จ!');
-    } else if (mode === 'keep_current') {
-      showStatus('คงข้อมูลเดิมบนหน้าจอไว้สำเร็จ!');
-    } else if (mode === 'merge') {
-      // 1. นำข้อมูลของท่านกับสถานประกอบการรวมกัน
-      if (!isJobCompany && parsedData && parsedData.selectedBehaviors) {
-        setSelectedBehaviors(prev => [...new Set([...prev, ...parsedData.selectedBehaviors])]);
       }
 
-      let idMapping = {};
-      
-      // 2. นำเข้าวิชา (Subjects) ไม่ให้ลบของเดิม และขยับรหัสวิชาอัตโนมัติหากซ้ำ
+      let idMapping = {}; // ตัวแปรเก็บการแปลงรหัสวิชา เช่น { "A": "B" }
+
+      // --- กฎข้อที่ 2: นำเข้าวิชาทั้งหมด และขยับรหัสวิชาอัตโนมัติหากซ้ำ ---
       if (!isJobCompany && parsedData?.subjects && currentUserRole !== 'ครูฝึกในสถานประกอบการ') {
-        setSubjects(prevSubjects => {
-          let currentSubjects = [...prevSubjects];
-          
-          // คัดเฉพาะวิชาที่มีข้อมูล
-          const incomingActiveSubjects = parsedData.subjects.filter(s => s.isAnalyzed || s.name?.trim() || s.description?.trim() || (s.mainTasks && s.mainTasks.length > 0));
+        let currentSubjects = [...subjects];
+        // กรองเอามาเฉพาะวิชาที่ไฟล์นั้นมีการวิเคราะห์ไว้แล้ว
+        const incomingActiveSubjects = parsedData.subjects.filter(s => s.isAnalyzed || s.name || s.description);
 
-          incomingActiveSubjects.forEach(incSub => {
-            // หาช่องวิชาในระบบปัจจุบันที่ยัง "ว่างอยู่จริงๆ" เพื่อให้ดันวิชาไปต่อท้าย
-            const emptyIndex = currentSubjects.findIndex(s => !s.isAnalyzed && !s.name?.trim() && !s.description?.trim() && !s.uploadedFile && (!s.mainTasks || s.mainTasks.length === 0));
-            
-            const oldId = incSub.id;
-            let newId = oldId;
+        incomingActiveSubjects.forEach(incSub => {
+          // หาช่องวิชาในระบบปัจจุบันที่ยัง "ว่างอยู่" (ไล่ตั้งแต่ A, B, C...)
+          const emptyIndex = currentSubjects.findIndex(s => !s.isAnalyzed && !s.name && !s.description && !s.uploadedFile);
 
-            if (emptyIndex !== -1) {
-              newId = currentSubjects[emptyIndex].id;
-            } else {
-              newId = getSubjectId(currentSubjects.length);
-            }
-            
-            idMapping[oldId] = newId;
+          const oldId = incSub.id;
+          let newId = oldId;
 
-            let shiftedSubject = {
-              ...incSub,
-              id: newId,
-              previewUrl: null,
-              uploadedFile: null,
-              mainTasks: (incSub.mainTasks || []).map(mt => {
-                const newMtId = mt.id ? mt.id.replace(new RegExp(`^${oldId}`), newId) : mt.id;
-                return {
-                  ...mt,
-                  id: newMtId,
-                  subTasks: (mt.subTasks || []).map(st => ({
-                    ...st,
-                    id: st.id ? st.id.replace(new RegExp(`^${oldId}`), newId) : st.id
-                  }))
-                };
-              })
-            };
+          if (emptyIndex !== -1) {
+            newId = currentSubjects[emptyIndex].id; // ใช้อักษรของช่องว่างนั้น
+          } else {
+            // กรณีอัปโหลดจนเกิน 30 วิชา ระบบจะสร้าง ID ลำดับถัดไปให้อัตโนมัติ (เช่น AE, AF...)
+            newId = getSubjectId(currentSubjects.length);
+          }
 
-            if (emptyIndex !== -1) {
-              currentSubjects[emptyIndex] = shiftedSubject;
-            } else {
-              currentSubjects.push(shiftedSubject);
-            }
-          });
-          
-          return currentSubjects;
+          idMapping[oldId] = newId; // บันทึกไว้ว่าเปลี่ยนจากอะไรเป็นอะไร
+
+          // อัปเดตรหัสงานหลักและงานย่อยภายในวิชานั้นให้ตรงกับอักษรใหม่
+          let shiftedSubject = {
+            ...incSub,
+            id: newId,
+            previewUrl: null,
+            uploadedFile: null,
+            mainTasks: (incSub.mainTasks || []).map(mt => {
+              const newMtId = mt.id.replace(oldId, newId);
+              return {
+                ...mt,
+                id: newMtId,
+                subTasks: (mt.subTasks || []).map(st => ({
+                  ...st,
+                  id: st.id.replace(oldId, newId)
+                }))
+              };
+            })
+          };
+
+          if (emptyIndex !== -1) {
+            currentSubjects[emptyIndex] = shiftedSubject;
+          } else {
+            currentSubjects.push(shiftedSubject);
+          }
         });
+        setSubjects(currentSubjects);
       }
 
-      // 3. แปลงรหัสอ้างอิง
+      // --- กฎข้อที่ 3: แปลงรหัสอ้างอิงในฝั่งสถานประกอบการให้ตรงกับวิชาที่ถูกขยับ ---
       const updateMappedIds = (idString) => {
         if (!idString) return idString;
         let updatedStr = idString;
         Object.keys(idMapping).forEach(oldKey => {
-           if (oldKey !== idMapping[oldKey]) {
-             const regex = new RegExp(`\\b${oldKey}(\\d+(?:-\\d+)?)\\b`, 'g');
-             updatedStr = updatedStr.replace(regex, `${idMapping[oldKey]}$1`);
-           }
+          if (oldKey !== idMapping[oldKey]) {
+            // ใช้ Regex ตรวจหาเฉพาะรหัสที่ตรงเผง เช่น A1-1 จะเปลี่ยนเป็น B1-1
+            const regex = new RegExp(`\\b${oldKey}(\\d+(?:-\\d+)?)\\b`, 'g');
+            updatedStr = updatedStr.replace(regex, `${idMapping[oldKey]}$1`);
+          }
         });
         return updatedStr;
       };
@@ -720,18 +581,18 @@ const App = () => {
       const remappedIncomingTasks = newIncomingTasks.map(task => ({
         ...task,
         subTasks: task.subTasks.map(sub => ({
-           ...sub,
-           detailed_steps: sub.detailed_steps.map(step => ({
-              ...step,
-              subjectTaskId: updateMappedIds(step.subjectTaskId)
-           }))
+          ...sub,
+          detailed_steps: sub.detailed_steps.map(step => ({
+            ...step,
+            subjectTaskId: updateMappedIds(step.subjectTaskId)
+          }))
         }))
       }));
 
-      // 4. ทำการรวมงานสถานประกอบการ
+      // --- ทำการรวมงานเข้าด้วยกัน ---
       let currentTasks = [...workplaceMainTasks];
       if (currentTasks.length === 1 && !currentTasks[0].name && (!currentTasks[0].subTasks || currentTasks[0].subTasks.length === 0)) currentTasks = [];
-      
+
       remappedIncomingTasks.forEach((incTask) => {
         let taskToAdd = { ...incTask };
         const matchedMainTask = currentTasks.find(curr => curr.name && cleanTaskName(curr.name) === cleanTaskName(incTask.name));
@@ -751,13 +612,14 @@ const App = () => {
         }
         currentTasks.push(taskToAdd);
       });
-      
+
       setWorkplaceMainTasks(currentTasks);
-      showStatus('นำเข้าและรวมข้อมูลสำเร็จ! (รักษาข้อมูลเดิมไว้ครบถ้วน)');
+      showStatus('รวมข้อมูลวิชาและงานสำเร็จ โดยคงการตั้งค่าของระบบเดิมไว้!');
     }
-    
+
     setShowDveConflictModal(false); setPendingDveData(null); setEditingCloudId(null);
   };
+
 
   const handleFileUploadLocal = (e) => {
     const file = e.target.files[0];
@@ -780,14 +642,8 @@ const App = () => {
       if (!parsed) try { parsed = JSON.parse(decodeUTF8(rawText)); } catch (_) { }
 
       if (parsed && (parsed.config || parsed.subjects || parsed.workplaceMainTasks)) {
-        // เช็คให้ครบว่าหน้าจอมี 'งานบริษัท' หรือ 'วิชา' อย่างใดอย่างหนึ่งอยู่แล้วหรือไม่
-        const currentHasWorkplace = workplaceMainTasks.length > 0 && workplaceMainTasks.some(t => t.name !== '');
-        const currentHasSubjects = subjectsRef.current.some(s => s.isAnalyzed || s.name?.trim() || s.description?.trim() || (s.mainTasks && s.mainTasks.length > 0));
-        const currentHasData = currentHasWorkplace || currentHasSubjects;
-
-        const incomingHasWorkplace = parsed.workplaceMainTasks && parsed.workplaceMainTasks.length > 0 && parsed.workplaceMainTasks.some(t => t.name !== '');
-        const incomingHasSubjects = parsed.subjects && parsed.subjects.some(s => s.isAnalyzed || s.name?.trim() || s.description?.trim() || (s.mainTasks && s.mainTasks.length > 0));
-        const incomingHasData = incomingHasWorkplace || incomingHasSubjects;
+        const currentHasData = workplaceMainTasks.length > 0 && workplaceMainTasks.some(t => t.name !== '');
+        const incomingHasData = parsed.workplaceMainTasks && parsed.workplaceMainTasks.length > 0 && parsed.workplaceMainTasks.some(t => t.name !== '');
 
         if (currentHasData && incomingHasData) {
           setPendingDveData(parsed); setShowDveConflictModal(true);
@@ -844,8 +700,7 @@ const App = () => {
 
         if (importedTasks.length > 0) {
           const normalizedTasks = importedTasks.map(t => (typeof t === 'string' ? { name: t, subTasks: [] } : t));
-          // แก้ไขการเช็คว่ามีข้อมูลเดิมอยู่แล้วหรือไม่ ให้ครอบคลุมการมีอยู่ของวิชา
-          const currentHasData = (workplaceMainTasks.length > 0 && workplaceMainTasks.some(t => t.name !== '')) || subjectsRef.current.some(s => s.isAnalyzed || s.name?.trim() || s.description?.trim());
+          const currentHasData = workplaceMainTasks.length > 0 && workplaceMainTasks.some(t => t.name !== '');
 
           if (currentHasData) {
             setPendingDveData(normalizedTasks); setShowDveConflictModal(true);
@@ -3631,4 +3486,5 @@ const App = () => {
   );
 };
 
-export default App;
+export default App; 
+
