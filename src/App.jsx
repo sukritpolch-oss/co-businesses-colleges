@@ -480,18 +480,43 @@ const App = () => {
   const executeApplyDveData = (parsedData, mode) => {
     const isJobCompany = Array.isArray(parsedData);
     if (!isJobCompany && parsedData) {
-      if (parsedData.config) {
+      
+      // 1. นำเข้าข้อมูลหน้าตั้งค่า (Config) 
+      // 🟢 แก้ไข: ถ้าเลือกโหมด 1 (merge) จะไม่เอาข้อมูลหน้าตั้งค่าจากไฟล์มาใช้เด็ดขาด เพื่อรักษาข้อมูลเดิมของระบบไว้
+      if (parsedData.config && mode !== 'merge') {
         setConfig(prev => ({
           ...parsedData.config,
           userApiKey: prev.userApiKey, openaiApiKey: prev.openaiApiKey, claudeApiKey: prev.claudeApiKey, deepseekApiKey: prev.deepseekApiKey
         }));
       }
+
+      // 2. นำเข้าข้อมูลรายวิชา
       if (parsedData.subjects && currentUserRole !== 'ครูฝึกในสถานประกอบการ') {
-        setSubjects(parsedData.subjects.map(s => ({ ...s, previewUrl: null, uploadedFile: null })));
+        if (mode === 'merge') {
+          // 🟢 แก้ไข: โหมด Merge จะนำรายวิชาที่โหลดเข้ามาใหม่ ไป "เติม/แทรก" ในช่องเดิมโดยไม่ลบวิชาเก่าทิ้ง 
+          // (รองรับการอัปโหลดผสมกันกี่ไฟล์ก็ได้)
+          setSubjects(prev => {
+            const next = [...prev];
+            parsedData.subjects.forEach(inc => {
+              if (inc.name || inc.description || inc.isAnalyzed) {
+                const idx = next.findIndex(s => s.id === inc.id);
+                if (idx !== -1) {
+                  next[idx] = { ...inc, previewUrl: null, uploadedFile: null };
+                }
+              }
+            });
+            return next;
+          });
+        } else {
+          setSubjects(parsedData.subjects.map(s => ({ ...s, previewUrl: null, uploadedFile: null })));
+        }
       }
+      
+      // นำเข้าข้อมูลพฤติกรรม
       if (parsedData.selectedBehaviors) setSelectedBehaviors(parsedData.selectedBehaviors);
     }
 
+    // 3. แปลงข้อมูลงานสถานประกอบการเตรียมนำเข้า
     let incomingTasks = isJobCompany ? parsedData : (parsedData?.workplaceMainTasks || []);
     const newIncomingTasks = incomingTasks.map((t, i) => ({
       ...t, id: Date.now() + i,
@@ -505,7 +530,9 @@ const App = () => {
       showStatus('คงข้อมูลเดิมบนหน้าจอไว้สำเร็จ!');
     } else if (mode === 'merge') {
       let currentTasks = [...workplaceMainTasks];
+      // เคลียร์กล่องเปล่าออกก่อน
       if (currentTasks.length === 1 && !currentTasks[0].name && (!currentTasks[0].subTasks || currentTasks[0].subTasks.length === 0)) currentTasks = [];
+      
       newIncomingTasks.forEach((incTask) => {
         let taskToAdd = { ...incTask };
         const matchedMainTask = currentTasks.find(curr => curr.name && cleanTaskName(curr.name) === cleanTaskName(incTask.name));
@@ -523,11 +550,13 @@ const App = () => {
             return sub;
           });
         }
+        // 🟢 แก้ไข: ผลักข้อมูลงานใหม่ต่อท้ายไปเรื่อยๆ (จะกดโหลดเพิ่มอีกกี่ไฟล์ก็ได้ ข้อมูลจะมาต่อกัน)
         currentTasks.push(taskToAdd);
       });
       setWorkplaceMainTasks(currentTasks);
-      showStatus('รวมข้อมูลงานสำเร็จ โปรดตรวจสอบและจัดการรายการที่ซ้ำซ้อน');
+      showStatus('นำเข้าและรวมข้อมูลสำเร็จ! (รักษาค่าหน้าตั้งค่าเดิมไว้)');
     }
+    
     setShowDveConflictModal(false); setPendingDveData(null); setEditingCloudId(null);
   };
 
