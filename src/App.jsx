@@ -1044,19 +1044,19 @@ const App = () => {
 
   const addSubjectMainTaskLocal = (subIndex) => setSubjects(prev => { const next = [...prev]; if (!next[subIndex].mainTasks) next[subIndex].mainTasks = []; const newId = `${next[subIndex].id}${next[subIndex].mainTasks.length + 1}`; next[subIndex].mainTasks.push({ id: newId, name: '', subTasks: [] }); return next; });
   const removeSubjectMainTaskLocal = (subIndex, mIdx) => { if (!window.confirm("ต้องการลบงานหลักนี้ใช่หรือไม่?")) return; setSubjects(prev => { const next = [...prev]; next[subIndex].mainTasks.splice(mIdx, 1); return next; }); };
-const clearSubjectLocal = (index) => {
-  if (!window.confirm(`ต้องการล้างข้อมูลรายวิชา ${subjectsRef.current[index].id} ทั้งหมดใช่หรือไม่?`)) return;
-  setSubjects(prev => {
-    const next = [...prev];
-    next[index] = {
-      id: next[index].id, code: '', name: '', credits: '', standards: '', learningOutcomes: '',
-      objectives: '', competencies: '', description: '', mainTasks: [],
-      isAnalyzed: false, previewUrl: null, uploadedFile: null
-    };
-    return next;
-  });
-  showStatus(`ล้างข้อมูลรายวิชาสำเร็จ`);
-};
+  const clearSubjectLocal = (index) => {
+    if (!window.confirm(`ต้องการล้างข้อมูลรายวิชา ${subjectsRef.current[index].id} ทั้งหมดใช่หรือไม่?`)) return;
+    setSubjects(prev => {
+      const next = [...prev];
+      next[index] = {
+        id: next[index].id, code: '', name: '', credits: '', standards: '', learningOutcomes: '',
+        objectives: '', competencies: '', description: '', mainTasks: [],
+        isAnalyzed: false, previewUrl: null, uploadedFile: null
+      };
+      return next;
+    });
+    showStatus(`ล้างข้อมูลรายวิชาสำเร็จ`);
+  };
   const addWorkplaceMainTask = () => {
     if (workplaceMainTasks.length >= 100) return showStatus("เพิ่มงานหลักได้สูงสุด ๑๐๐ งาน");
     setWorkplaceMainTasks(prev => [...prev, { id: Date.now(), name: '', isAnalyzing: false, isConfirmed: false, subTasks: [] }]);
@@ -2108,9 +2108,15 @@ const clearSubjectLocal = (index) => {
                     <div className="flex-1 font-serif">
                       <input className={`w-full font-black text-sm bg-transparent outline-none border-b-2 transition-colors font-serif ${sub.isAnalyzed ? 'border-green-300 text-green-900' : 'border-slate-50 focus:border-indigo-500'}`} placeholder="ชื่อรายวิชา..." value={sub.name || ''} onChange={e => { const n = [...subjects]; n[idx].name = e.target.value; setSubjects(n); }} />
                     </div>
-                    {sub.isAnalyzed && <CheckSquare className="text-green-600 animate-in zoom-in duration-500" />}
-                  </div>
-                  <div className="space-y-4 font-serif">
+                    {sub.isAnalyzed && (
+                      <div className="flex items-center gap-2 animate-in zoom-in duration-500">
+                        <CheckSquare className="text-green-600" />
+                        <button onClick={() => clearSubjectLocal(idx)} className="text-red-400 hover:text-red-600 p-2 bg-red-50 hover:bg-red-100 rounded-xl transition-colors" title="ล้างข้อมูลวิชานี้">
+                          <Trash2 size={18} />
+                        </button>
+                      </div>
+                    )}
+                  </div>                  <div className="space-y-4 font-serif">
                     <div className="flex gap-2">
                       <input className="w-1/3 px-4 py-3 text-[11px] font-bold bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500 font-serif" placeholder="ท-ป-น (เช่น 0-6-2)" value={sub.credits || ''} onChange={e => { const n = [...subjects]; n[idx].credits = e.target.value; setSubjects(n); }} />
                       <textarea className="w-2/3 h-12 p-3 text-[11px] bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500 font-serif leading-tight resize-none" placeholder="สมรรถนะรายวิชา..." value={sub.competencies || ''} onChange={e => { const n = [...subjects]; n[idx].competencies = e.target.value; setSubjects(n); }} />
