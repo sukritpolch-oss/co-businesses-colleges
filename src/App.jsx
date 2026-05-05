@@ -503,8 +503,8 @@ const App = () => {
       showStatus('ใช้ข้อมูลจากไฟล์อัปโหลดสำเร็จ!');
     } else if (mode === 'keep_current') {
       showStatus('คงข้อมูลเดิมบนหน้าจอไว้สำเร็จ!');
-    } else if (mode === 'merge') {
-      // 1. นำข้อมูลของท่านกับสถานประกอบการรวมกัน
+    } else if (mode === 'merge' || mode === 'append') {
+      // 1. นำข้อมูลของท่านกับสถานประกอบการรวมกัน หรือ นำรายวิชาไปต่อท้าย
       // --- กฎข้อที่ 1: ไม่ทับ Config เดิม นำมาเฉพาะรายการประเมิน ---
       if (!isJobCompany && parsedData) {
         if (parsedData.selectedBehaviors) {
@@ -595,20 +595,22 @@ const App = () => {
 
       remappedIncomingTasks.forEach((incTask) => {
         let taskToAdd = { ...incTask };
-        const matchedMainTask = currentTasks.find(curr => curr.name && cleanTaskName(curr.name) === cleanTaskName(incTask.name));
-        if (matchedMainTask) taskToAdd.name = `${taskToAdd.name} (สอดคล้องกับงานหลัก: ${matchedMainTask.name})`;
-        if (taskToAdd.subTasks) {
-          taskToAdd.subTasks = taskToAdd.subTasks.map((sub) => {
-            let matchedSubName = '';
-            for (const curr of currentTasks) {
-              if (curr.subTasks) {
-                const match = curr.subTasks.find(currSub => currSub.workplaceName && cleanTaskName(currSub.workplaceName) === cleanTaskName(sub.workplaceName));
-                if (match) { matchedSubName = match.workplaceName; break; }
+        if (mode === 'merge') {
+          const matchedMainTask = currentTasks.find(curr => curr.name && cleanTaskName(curr.name) === cleanTaskName(incTask.name));
+          if (matchedMainTask) taskToAdd.name = `${taskToAdd.name} (สอดคล้องกับงานหลัก: ${matchedMainTask.name})`;
+          if (taskToAdd.subTasks) {
+            taskToAdd.subTasks = taskToAdd.subTasks.map((sub) => {
+              let matchedSubName = '';
+              for (const curr of currentTasks) {
+                if (curr.subTasks) {
+                  const match = curr.subTasks.find(currSub => currSub.workplaceName && cleanTaskName(currSub.workplaceName) === cleanTaskName(sub.workplaceName));
+                  if (match) { matchedSubName = match.workplaceName; break; }
+                }
               }
-            }
-            if (matchedSubName) return { ...sub, workplaceName: `${sub.workplaceName} (สอดคล้องกับงานย่อย: ${matchedSubName})` };
-            return sub;
-          });
+              if (matchedSubName) return { ...sub, workplaceName: `${sub.workplaceName} (สอดคล้องกับงานย่อย: ${matchedSubName})` };
+              return sub;
+            });
+          }
         }
         currentTasks.push(taskToAdd);
       });
@@ -642,10 +644,9 @@ const App = () => {
       if (!parsed) try { parsed = JSON.parse(decodeUTF8(rawText)); } catch (_) { }
 
       if (parsed && (parsed.config || parsed.subjects || parsed.workplaceMainTasks)) {
-        const currentHasData = workplaceMainTasks.length > 0 && workplaceMainTasks.some(t => t.name !== '');
-        const incomingHasData = parsed.workplaceMainTasks && parsed.workplaceMainTasks.length > 0 && parsed.workplaceMainTasks.some(t => t.name !== '');
+        const currentHasData = (workplaceMainTasks.length > 0 && workplaceMainTasks.some(t => t.name !== '')) || subjects.some(s => s.isAnalyzed || s.name || s.description);
 
-        if (currentHasData && incomingHasData) {
+        if (currentHasData) {
           setPendingDveData(parsed); setShowDveConflictModal(true);
         } else {
           executeApplyDveData(parsed, 'overwrite');
@@ -1815,8 +1816,11 @@ const App = () => {
             <h3 className="text-xl font-black text-center text-slate-800 mb-2">พบข้อมูลงานสถานประกอบการซ้อนทับ</h3>
             <p className="text-center text-sm text-slate-500 mb-6 font-bold leading-relaxed">ท่านมีข้อมูลงานที่กำลังวิเคราะห์ค้างอยู่ และในไฟล์เซฟงานที่กำลังโหลดก็มีข้อมูลงานเช่นกัน<br />โปรดเลือกวิธีจัดการข้อมูล:</p>
             <div className="space-y-3">
-              <button onClick={() => executeApplyDveData(pendingDveData, 'merge')} className="w-full py-3 px-4 bg-indigo-600 text-white rounded-2xl font-black shadow-md hover:bg-indigo-700 transition-all text-sm text-left flex flex-col items-start gap-1">
-                <span className="flex items-center gap-2"><ListChecks size={16} /> 1. นำข้อมูลของท่านกับสถานประกอบการรวมกัน</span>
+              <button onClick={() => executeApplyDveData(pendingDveData, 'append')} className="w-full py-3 px-4 bg-blue-600 text-white rounded-2xl font-black shadow-md hover:bg-blue-700 transition-all text-sm text-left flex flex-col items-start gap-1">
+                <span className="flex items-center gap-2"><Plus size={16} /> จดจำงาน (เพิ่มรายวิชาในช่องว่างถัดไป)</span>
+                <span className="text-[10px] font-normal opacity-80 pl-6 text-blue-200">นำข้อมูลจากรายวิชาในไฟล์ ไปใส่ช่องรายวิชาอ้างอิงที่ยังว่างอยู่ตามลำดับ (เช่น A นำไปใส่ B)</span>
+              </button>
+              <button onClick={() => executeApplyDveData(pendingDveData, 'merge')} className="w-full py-3 px-4 bg-indigo-600 text-white rounded-2xl font-black shadow-md hover:bg-indigo-700 transition-all text-sm text-left flex flex-col items-start gap-1">                <span className="flex items-center gap-2"><ListChecks size={16} /> 1. นำข้อมูลของท่านกับสถานประกอบการรวมกัน</span>
                 <span className="text-[10px] font-normal opacity-80 pl-6 text-indigo-200">งานที่ทับซ้อนกันจะแสดงข้อความว่า "สอดคล้องกับ..." ต่อท้ายชื่อ</span>
               </button>
               <button onClick={() => executeApplyDveData(pendingDveData, 'overwrite')} className="w-full py-3 px-4 bg-slate-800 text-white rounded-2xl font-black shadow-md hover:bg-slate-900 transition-all text-sm text-left flex flex-col items-start gap-1">
@@ -3486,5 +3490,5 @@ const App = () => {
   );
 };
 
-export default App; 
+export default App;
 
