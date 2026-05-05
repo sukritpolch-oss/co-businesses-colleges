@@ -154,7 +154,30 @@ const App = () => {
     setStatusMessage(msg);
     setTimeout(() => setStatusMessage(null), 3000);
   }, []);
+// --- เพิ่มระบบ Auto Login เมื่อเปิดเว็บใหม่ หรือกด F5 ---
+  useEffect(() => {
+    const savedSession = localStorage.getItem('dve_auth_session');
+    if (savedSession) {
+      try {
+        const userData = JSON.parse(savedSession);
+        setIsAuthenticated(true);
+        setIsDeveloper(userData.isDeveloper || false);
+        setCurrentUserEmail(userData.email);
+        setCurrentUserRole(userData.role);
 
+        setConfig(prev => ({
+          ...prev,
+          collegeName: userData.collegeName || prev.collegeName,
+          companyName: userData.companyName || prev.companyName,
+          province: userData.province || prev.province,
+          trainerName: userData.trainerName || prev.trainerName,
+          department: userData.department || prev.department
+        }));
+      } catch (error) {
+        localStorage.removeItem('dve_auth_session');
+      }
+    }
+  }, []);
   // --- Authentication ---
   const fetchDatabaseData = async () => {
     if (!GOOGLE_SCRIPT_URL) return setIsLoadingData(false);
@@ -234,9 +257,15 @@ const App = () => {
 
       setConfig(prev => ({
         ...prev,
+        
         trainerName: 'Admin Sukritpol'
       }));
-
+localStorage.setItem('dve_auth_session', JSON.stringify({
+        email: authData.email,
+        role: 'admin',
+        isDeveloper: true,
+        trainerName: 'Admin Sukritpol'
+      }));
       setShowWelcomeModal(true);
       return showStatus('ยินดีต้อนรับเข้าสู่ระบบผู้ดูแล (Admin Panel)');
     }
@@ -262,14 +291,28 @@ const App = () => {
     setCurrentUserEmail(userByEmail.email);
     setCurrentUserRole(userByEmail.role || 'ครู');
 
+    const trainerName = `${userByEmail.firstName || ''} ${userByEmail.lastName || ''}`.trim();
+
     // ดึงข้อมูลจากฐานข้อมูลมาใส่ใน Config ทันที
     setConfig(prev => ({
       ...prev,
       collegeName: userByEmail.college || '',
       companyName: userByEmail.companyName || '',
       province: userByEmail.province || '',
-      trainerName: `${userByEmail.firstName || ''} ${userByEmail.lastName || ''}`.trim(),
+      trainerName: trainerName,
       department: userByEmail.department || prev.department
+    }));
+
+    // บันทึก Session ลงเครื่อง
+    localStorage.setItem('dve_auth_session', JSON.stringify({
+      email: userByEmail.email,
+      role: userByEmail.role || 'ครู',
+      isDeveloper: false,
+      collegeName: userByEmail.college || '',
+      companyName: userByEmail.companyName || '',
+      province: userByEmail.province || '',
+      trainerName: trainerName,
+      department: userByEmail.department || ''
     }));
 
     setShowWelcomeModal(true);
@@ -328,6 +371,7 @@ const App = () => {
     setIsSubmittingSurvey(false); setShowSurveyModal(false); setSurveyRating(0); setSurveyFeedback('');
     setIsAuthenticated(false); setIsDeveloper(false); setCurrentUserEmail(''); setCurrentUserRole('ครู');
     setAuthData(prev => ({ ...prev, password: '' }));
+    localStorage.removeItem('dve_auth_session');
     showStatus('ออกจากระบบเรียบร้อยแล้ว');
   };
 
