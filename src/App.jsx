@@ -495,6 +495,7 @@ const App = () => {
           }));
         }
         if (parsedData.subjects && currentUserRole !== 'ครูฝึกในสถานประกอบการ') {
+          // หากเป็นการโหลดทับ (โหมดที่ 2) ถึงจะยอมให้เซ็ต subjects ใหม่ทับของเดิม
           setSubjects(parsedData.subjects.map(s => ({ ...s, previewUrl: null, uploadedFile: null })));
         }
         if (parsedData.selectedBehaviors) setSelectedBehaviors(parsedData.selectedBehaviors);
@@ -514,52 +515,58 @@ const App = () => {
       
       // 2. นำเข้าวิชา (Subjects) ไม่ให้ลบของเดิม และขยับรหัสวิชาอัตโนมัติหากซ้ำ
       if (!isJobCompany && parsedData?.subjects && currentUserRole !== 'ครูฝึกในสถานประกอบการ') {
-        let currentSubjects = [...subjects];
-        // ดึงมาเฉพาะวิชาที่มีข้อมูล
-        const incomingActiveSubjects = parsedData.subjects.filter(s => s.isAnalyzed || s.name?.trim() || s.description?.trim() || (s.mainTasks && s.mainTasks.length > 0));
-
-        incomingActiveSubjects.forEach(incSub => {
-          // หาช่องวิชาในระบบปัจจุบันที่ยัง "ว่างอยู่จริงๆ" (เพื่อป้องกันการไปทับหรือลบวิชาเดิม)
-          const emptyIndex = currentSubjects.findIndex(s => !s.isAnalyzed && !s.name?.trim() && !s.description?.trim() && !s.uploadedFile && (!s.mainTasks || s.mainTasks.length === 0));
+        
+        // 🔴 จุดสำคัญ: ไม่เอา [...subjects] แบบดื้อๆ มาทำต่อ แต่คัดลอก State ปัจจุบันที่อัปเดตล่าสุดมาใช้
+        setSubjects(prevSubjects => {
+          let currentSubjects = [...prevSubjects];
           
-          const oldId = incSub.id;
-          let newId = oldId;
+          // ดึงมาเฉพาะวิชาที่มีข้อมูล
+          const incomingActiveSubjects = parsedData.subjects.filter(s => s.isAnalyzed || s.name?.trim() || s.description?.trim() || (s.mainTasks && s.mainTasks.length > 0));
 
-          if (emptyIndex !== -1) {
-            newId = currentSubjects[emptyIndex].id; // ใช้อักษรของช่องว่างนั้น
-          } else {
-            // กรณีอัปโหลดจนเกินจำนวนวิชาที่มี ระบบจะสร้าง ID ลำดับถัดไปให้อัตโนมัติ (เช่น AE, AF...) ไม่จำกัดไฟล์
-            newId = getSubjectId(currentSubjects.length);
-          }
+          incomingActiveSubjects.forEach(incSub => {
+            // หาช่องวิชาในระบบปัจจุบันที่ยัง "ว่างอยู่จริงๆ" (เพื่อป้องกันการไปทับหรือลบวิชาเดิม)
+            const emptyIndex = currentSubjects.findIndex(s => !s.isAnalyzed && !s.name?.trim() && !s.description?.trim() && !s.uploadedFile && (!s.mainTasks || s.mainTasks.length === 0));
+            
+            const oldId = incSub.id;
+            let newId = oldId;
+
+            if (emptyIndex !== -1) {
+              newId = currentSubjects[emptyIndex].id; // ใช้อักษรของช่องว่างนั้น
+            } else {
+              // กรณีอัปโหลดจนเกินจำนวนวิชาที่มี ระบบจะสร้าง ID ลำดับถัดไปให้อัตโนมัติ (เช่น AE, AF...)
+              newId = getSubjectId(currentSubjects.length);
+            }
+            
+            idMapping[oldId] = newId;
+
+            // อัปเดตรหัสงานหลักและงานย่อยภายในวิชานั้นให้ตรงกับอักษรใหม่
+            let shiftedSubject = {
+              ...incSub,
+              id: newId,
+              previewUrl: null,
+              uploadedFile: null,
+              mainTasks: (incSub.mainTasks || []).map(mt => {
+                const newMtId = mt.id ? mt.id.replace(new RegExp(`^${oldId}`), newId) : mt.id;
+                return {
+                  ...mt,
+                  id: newMtId,
+                  subTasks: (mt.subTasks || []).map(st => ({
+                    ...st,
+                    id: st.id ? st.id.replace(new RegExp(`^${oldId}`), newId) : st.id
+                  }))
+                };
+              })
+            };
+
+            if (emptyIndex !== -1) {
+              currentSubjects[emptyIndex] = shiftedSubject;
+            } else {
+              currentSubjects.push(shiftedSubject); // เพิ่มกล่องวิชาใหม่ถัดไปเรื่อยๆ
+            }
+          });
           
-          idMapping[oldId] = newId;
-
-          // อัปเดตรหัสงานหลักและงานย่อยภายในวิชานั้นให้ตรงกับอักษรใหม่
-          let shiftedSubject = {
-            ...incSub,
-            id: newId,
-            previewUrl: null,
-            uploadedFile: null,
-            mainTasks: (incSub.mainTasks || []).map(mt => {
-              const newMtId = mt.id ? mt.id.replace(new RegExp(`^${oldId}`), newId) : mt.id;
-              return {
-                ...mt,
-                id: newMtId,
-                subTasks: (mt.subTasks || []).map(st => ({
-                  ...st,
-                  id: st.id ? st.id.replace(new RegExp(`^${oldId}`), newId) : st.id
-                }))
-              };
-            })
-          };
-
-          if (emptyIndex !== -1) {
-            currentSubjects[emptyIndex] = shiftedSubject;
-          } else {
-            currentSubjects.push(shiftedSubject); // เพิ่มกล่องวิชาใหม่ถัดไปเรื่อยๆ
-          }
+          return currentSubjects; // 🔴 นำผลลัพธ์นี้ไปเป็นค่าใหม่ของ Subjects โดยไม่ทับของเดิม
         });
-        setSubjects(currentSubjects);
       }
 
       // 3. แปลงรหัสอ้างอิงในฝั่งงานสถานประกอบการ (Workplace Tasks) ให้ตรงกับวิชาที่ถูกขยับ
