@@ -495,7 +495,6 @@ const App = () => {
           }));
         }
         if (parsedData.subjects && currentUserRole !== 'ครูฝึกในสถานประกอบการ') {
-          // หากเป็นการโหลดทับ (โหมดที่ 2) ถึงจะยอมให้เซ็ต subjects ใหม่ทับของเดิม
           setSubjects(parsedData.subjects.map(s => ({ ...s, previewUrl: null, uploadedFile: null })));
         }
         if (parsedData.selectedBehaviors) setSelectedBehaviors(parsedData.selectedBehaviors);
@@ -505,41 +504,36 @@ const App = () => {
     } else if (mode === 'keep_current') {
       showStatus('คงข้อมูลเดิมบนหน้าจอไว้สำเร็จ!');
     } else if (mode === 'merge') {
-      
-      // 1. จัดการด้านกิจนิสัย (ถ้ามี)
+      // 1. นำข้อมูลของท่านกับสถานประกอบการรวมกัน
       if (!isJobCompany && parsedData && parsedData.selectedBehaviors) {
         setSelectedBehaviors(prev => [...new Set([...prev, ...parsedData.selectedBehaviors])]);
       }
 
-      let idMapping = {}; // เก็บการแปลงรหัสวิชา เช่น { "A": "B" }
+      let idMapping = {};
       
       // 2. นำเข้าวิชา (Subjects) ไม่ให้ลบของเดิม และขยับรหัสวิชาอัตโนมัติหากซ้ำ
       if (!isJobCompany && parsedData?.subjects && currentUserRole !== 'ครูฝึกในสถานประกอบการ') {
-        
-        // 🔴 จุดสำคัญ: ไม่เอา [...subjects] แบบดื้อๆ มาทำต่อ แต่คัดลอก State ปัจจุบันที่อัปเดตล่าสุดมาใช้
         setSubjects(prevSubjects => {
           let currentSubjects = [...prevSubjects];
           
-          // ดึงมาเฉพาะวิชาที่มีข้อมูล
+          // คัดเฉพาะวิชาที่มีข้อมูล (ไม่เอาช่องว่างเปล่าๆ มาทับ)
           const incomingActiveSubjects = parsedData.subjects.filter(s => s.isAnalyzed || s.name?.trim() || s.description?.trim() || (s.mainTasks && s.mainTasks.length > 0));
 
           incomingActiveSubjects.forEach(incSub => {
-            // หาช่องวิชาในระบบปัจจุบันที่ยัง "ว่างอยู่จริงๆ" (เพื่อป้องกันการไปทับหรือลบวิชาเดิม)
+            // หาช่องวิชาในระบบปัจจุบันที่ยัง "ว่างอยู่จริงๆ" เพื่อให้ดันวิชาไปต่อท้าย
             const emptyIndex = currentSubjects.findIndex(s => !s.isAnalyzed && !s.name?.trim() && !s.description?.trim() && !s.uploadedFile && (!s.mainTasks || s.mainTasks.length === 0));
             
             const oldId = incSub.id;
             let newId = oldId;
 
             if (emptyIndex !== -1) {
-              newId = currentSubjects[emptyIndex].id; // ใช้อักษรของช่องว่างนั้น
+              newId = currentSubjects[emptyIndex].id;
             } else {
-              // กรณีอัปโหลดจนเกินจำนวนวิชาที่มี ระบบจะสร้าง ID ลำดับถัดไปให้อัตโนมัติ (เช่น AE, AF...)
               newId = getSubjectId(currentSubjects.length);
             }
             
             idMapping[oldId] = newId;
 
-            // อัปเดตรหัสงานหลักและงานย่อยภายในวิชานั้นให้ตรงกับอักษรใหม่
             let shiftedSubject = {
               ...incSub,
               id: newId,
@@ -561,21 +555,20 @@ const App = () => {
             if (emptyIndex !== -1) {
               currentSubjects[emptyIndex] = shiftedSubject;
             } else {
-              currentSubjects.push(shiftedSubject); // เพิ่มกล่องวิชาใหม่ถัดไปเรื่อยๆ
+              currentSubjects.push(shiftedSubject);
             }
           });
           
-          return currentSubjects; // 🔴 นำผลลัพธ์นี้ไปเป็นค่าใหม่ของ Subjects โดยไม่ทับของเดิม
+          return currentSubjects;
         });
       }
 
-      // 3. แปลงรหัสอ้างอิงในฝั่งงานสถานประกอบการ (Workplace Tasks) ให้ตรงกับวิชาที่ถูกขยับ
+      // 3. แปลงรหัสอ้างอิง
       const updateMappedIds = (idString) => {
         if (!idString) return idString;
         let updatedStr = idString;
         Object.keys(idMapping).forEach(oldKey => {
            if (oldKey !== idMapping[oldKey]) {
-             // ใช้ Regex ตรวจหาเฉพาะรหัสที่ตรงเผง เช่น A1-1 จะเปลี่ยนเป็น B1-1
              const regex = new RegExp(`\\b${oldKey}(\\d+(?:-\\d+)?)\\b`, 'g');
              updatedStr = updatedStr.replace(regex, `${idMapping[oldKey]}$1`);
            }
@@ -594,16 +587,14 @@ const App = () => {
         }))
       }));
 
-      // 4. ทำการรวมงานสถานประกอบการเข้าด้วยกัน (โดยคงของเดิมไว้ทั้งหมด)
+      // 4. ทำการรวมงานสถานประกอบการ
       let currentTasks = [...workplaceMainTasks];
       if (currentTasks.length === 1 && !currentTasks[0].name && (!currentTasks[0].subTasks || currentTasks[0].subTasks.length === 0)) currentTasks = [];
       
       remappedIncomingTasks.forEach((incTask) => {
         let taskToAdd = { ...incTask };
-        // ตรวจสอบว่าชื่องานหลักซ้ำหรือไม่
         const matchedMainTask = currentTasks.find(curr => curr.name && cleanTaskName(curr.name) === cleanTaskName(incTask.name));
         if (matchedMainTask) taskToAdd.name = `${taskToAdd.name} (สอดคล้องกับงานหลัก: ${matchedMainTask.name})`;
-        
         if (taskToAdd.subTasks) {
           taskToAdd.subTasks = taskToAdd.subTasks.map((sub) => {
             let matchedSubName = '';
@@ -625,6 +616,108 @@ const App = () => {
     }
     
     setShowDveConflictModal(false); setPendingDveData(null); setEditingCloudId(null);
+  };
+
+  const handleFileUploadLocal = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const resetInputs = () => { if (fileInputRef.current) fileInputRef.current.value = ''; if (evalFileInputRef.current) evalFileInputRef.current.value = ''; };
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      let rawText = event.target.result;
+      rawText = rawText.replace(/^\uFEFF/, '').trim();
+
+      let parsed = null;
+      const decodeUTF8 = (str) => {
+        try { return decodeURIComponent(escape(atob(str))); }
+        catch (err) { return new TextDecoder().decode(Uint8Array.from(atob(str), c => c.charCodeAt(0))); }
+      };
+
+      try { parsed = JSON.parse(rawText); } catch (_) { }
+      if (!parsed) try { parsed = JSON.parse(decryptPayload(rawText)); } catch (_) { }
+      if (!parsed) try { parsed = JSON.parse(decodeUTF8(rawText)); } catch (_) { }
+
+      if (parsed && (parsed.config || parsed.subjects || parsed.workplaceMainTasks)) {
+        // 🔴 แก้ไขจุดบั๊ก: เช็คให้ครบว่าหน้าจอมี 'งานบริษัท' หรือ 'วิชา' อย่างใดอย่างหนึ่งอยู่แล้วหรือไม่
+        const currentHasWorkplace = workplaceMainTasks.length > 0 && workplaceMainTasks.some(t => t.name !== '');
+        const currentHasSubjects = subjectsRef.current.some(s => s.isAnalyzed || s.name?.trim() || s.description?.trim() || (s.mainTasks && s.mainTasks.length > 0));
+        const currentHasData = currentHasWorkplace || currentHasSubjects;
+
+        const incomingHasWorkplace = parsed.workplaceMainTasks && parsed.workplaceMainTasks.length > 0 && parsed.workplaceMainTasks.some(t => t.name !== '');
+        const incomingHasSubjects = parsed.subjects && parsed.subjects.some(s => s.isAnalyzed || s.name?.trim() || s.description?.trim() || (s.mainTasks && s.mainTasks.length > 0));
+        const incomingHasData = incomingHasWorkplace || incomingHasSubjects;
+
+        if (currentHasData && incomingHasData) {
+          setPendingDveData(parsed); setShowDveConflictModal(true);
+        } else {
+          executeApplyDveData(parsed, 'overwrite');
+        }
+      } else {
+        showStatus('เปิดไฟล์ไม่สำเร็จ: ไฟล์เสียหายหรือไม่พบข้อมูล');
+      }
+      resetInputs();
+    };
+    reader.readAsText(file, 'UTF-8');
+  };
+
+  const handleJobCompanyUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        let rawText = event.target.result;
+        rawText = rawText.replace(/^\uFEFF/, '').trim();
+
+        let parsed = null;
+        const decodeUTF8 = (str) => {
+          try { return decodeURIComponent(escape(atob(str))); }
+          catch (err) { return new TextDecoder().decode(Uint8Array.from(atob(str), c => c.charCodeAt(0))); }
+        };
+
+        try { parsed = JSON.parse(rawText); } catch (_) { }
+        if (!parsed) try { parsed = JSON.parse(decryptPayload(rawText)); } catch (_) { }
+        if (!parsed) try { parsed = JSON.parse(decodeUTF8(rawText)); } catch (_) { }
+
+        let importedTasks = [];
+        if (parsed) {
+          if (Array.isArray(parsed)) importedTasks = parsed;
+          else if (typeof parsed === 'object') {
+            if (parsed.workplaceMainTasks && Array.isArray(parsed.workplaceMainTasks)) importedTasks = parsed.workplaceMainTasks;
+            else if (parsed.data && Array.isArray(parsed.data)) importedTasks = parsed.data;
+            else if (parsed.tasks && Array.isArray(parsed.tasks)) importedTasks = parsed.tasks;
+            else {
+              for (let key in parsed) {
+                if (Array.isArray(parsed[key]) && parsed[key].length > 0) { importedTasks = parsed[key]; break; }
+              }
+            }
+          }
+        } else if (rawText.length > 0 && !rawText.includes('<html')) {
+          let decodedText = rawText;
+          try { decodedText = decodeUTF8(rawText); } catch (_) { }
+          const lines = decodedText.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+          importedTasks = lines.map(line => ({ name: line, subTasks: [] }));
+        }
+
+        if (importedTasks.length > 0) {
+          const normalizedTasks = importedTasks.map(t => (typeof t === 'string' ? { name: t, subTasks: [] } : t));
+          // 🔴 แก้ไขการเช็คว่ามีข้อมูลเดิมอยู่แล้วหรือไม่ ให้ครอบคลุมการมีอยู่ของวิชา
+          const currentHasData = (workplaceMainTasks.length > 0 && workplaceMainTasks.some(t => t.name !== '')) || subjectsRef.current.some(s => s.isAnalyzed || s.name?.trim() || s.description?.trim());
+
+          if (currentHasData) {
+            setPendingDveData(normalizedTasks); setShowDveConflictModal(true);
+          } else {
+            executeApplyDveData(normalizedTasks, 'overwrite');
+          }
+        } else {
+          showStatus('เปิดไฟล์ไม่สำเร็จ: ไม่พบรูปแบบข้อมูลงานที่ระบบรู้จัก');
+        }
+      } catch (err) { showStatus('เกิดข้อผิดพลาดในการอ่านไฟล์'); }
+      if (jobCompanyInputRef.current) jobCompanyInputRef.current.value = '';
+    };
+    reader.readAsText(file, 'UTF-8');
   };
 
   const handleFileUploadLocal = (e) => {
