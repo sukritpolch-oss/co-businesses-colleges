@@ -1044,7 +1044,7 @@ const App = () => {
 
   const addSubjectMainTaskLocal = (subIndex) => setSubjects(prev => { const next = [...prev]; if (!next[subIndex].mainTasks) next[subIndex].mainTasks = []; const newId = `${next[subIndex].id}${next[subIndex].mainTasks.length + 1}`; next[subIndex].mainTasks.push({ id: newId, name: '', subTasks: [] }); return next; });
   const removeSubjectMainTaskLocal = (subIndex, mIdx) => { if (!window.confirm("ต้องการลบงานหลักนี้ใช่หรือไม่?")) return; setSubjects(prev => { const next = [...prev]; next[subIndex].mainTasks.splice(mIdx, 1); return next; }); };
-  const clearSubjectLocal = (index) => {
+ const clearSubjectLocal = (index) => {
   if (!window.confirm(`ต้องการลบรายวิชา ${subjectsRef.current[index].id} และขยับลำดับรายวิชาถัดไปขึ้นมาแทนที่ใช่หรือไม่?`)) return;
 
   let currentSubjects = [...subjects];
