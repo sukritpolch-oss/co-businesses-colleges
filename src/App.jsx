@@ -1097,7 +1097,7 @@ const App = () => {
       setWorkplaceMainTasks(prev => prev.map(t => t.id === taskId ? { ...t, isAnalyzing: false } : t));
     }
   };
-const analyzeSingleWorkplaceSubtask = async (mIdx, sIdx) => {
+  const analyzeSingleWorkplaceSubtask = async (mIdx, sIdx) => {
     const activeKey = config.aiProvider === 'openai' ? config.openaiApiKey : config.aiProvider === 'claude' ? config.claudeApiKey : config.aiProvider === 'deepseek' ? config.deepseekApiKey : (config.userApiKey || apiKey);
     if (!activeKey?.trim() && config.aiProvider !== 'gemini') return showStatus(`กรุณาใส่ API Key ของ ${config.aiProvider} ในหน้า '๑. ตั้งค่า' ก่อนใช้งาน`);
     if (config.aiProvider === 'gemini' && !config.userApiKey?.trim() && !apiKey) return showStatus("กรุณาใส่ Gemini API Key ในหน้า '๑. ตั้งค่า' ก่อนใช้งาน");
@@ -2398,7 +2398,7 @@ const analyzeSingleWorkplaceSubtask = async (mIdx, sIdx) => {
                               <th className="border border-black p-2 w-[35%] align-middle">งานจากรายวิชา</th>
                               <th className="border border-black p-2 w-[35%] align-middle">งานในสถานประกอบการ</th>
                               <th className="border border-black p-2 text-center w-12 p-0 align-middle">
-                                <div className="vertical-text mx-auto text-[9pt]">เวลาฝึก (ชั่วโมง)</div>
+                                <div className="vertical-text mx-auto text-[9pt]">เวลาฝึก (วัน/ชั่วโมง)</div>
                               </th>
                               {activeSubjects.map((s, i) => (
                                 <th key={s.id} className="border border-black p-2 font-bold w-12 p-0 align-bottom">
@@ -2511,7 +2511,7 @@ const analyzeSingleWorkplaceSubtask = async (mIdx, sIdx) => {
                     <div className="report-header font-serif text-[11pt] space-y-1.5">
                       <h2 className="text-center font-bold underline uppercase mb-6 font-serif">แผนการฝึกอาชีพตลอดหลักสูตรร่วมกับ {config.companyName || '................'}</h2>
                       <p>ผู้เข้ารับการฝึกระบบทวิภาคี วิทยาลัย {config.collegeName || '................'} ระดับชั้น {config.level || '................'} กลุ่มอาชีพ {config.group || '................'} สาขาวิชา {config.major || '................'}</p>
-                      <p>ฝึกงานปีการศึกษา {config.academicYear || '.........'} ระหว่างวันที่ {config.startDate || '.........'} ถึง วันที่ {config.endDate || '.........'} เวลาฝึก {totalTrainingHours} ชั่วโมง</p>
+                      <p>ฝึกงานปีการศึกษา {config.academicYear || '.........'} ระหว่างวันที่ {config.startDate || '.........'} ถึง วันที่ {config.endDate || '.........'} เวลาฝึก {totalTrainingHours} วัน/ชั่วโมง</p>
                       {!isWorkplaceTrainer && <p>ผลลัพธ์การเรียนรู้ (ของวิชาที่นำไปฝึกในสถานประกอบการ): <span className="font-bold">{analyzedSubjectNames || '................'}</span></p>}
                     </div>
                     <div className="font-bold text-[12pt] mb-3 uppercase underline font-serif">๑. รายการงานที่จัดฝึกปฏิบัติจริง</div>
@@ -2522,7 +2522,7 @@ const analyzeSingleWorkplaceSubtask = async (mIdx, sIdx) => {
                           <th className="border border-black p-2">งานหลักในสถานประกอบการ</th>
                           <th className="border border-black p-2">งานย่อยในสถานประกอบการ</th>
                           <th className="border border-black p-2">ชื่อ-สกุล ครูฝึก</th>
-                          <th className="border border-black p-2 w-24">เวลาฝึก (ชม.)</th>
+                          <th className="border border-black p-2 w-28">เวลาฝึก (วัน/ชม.)</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -2532,7 +2532,9 @@ const analyzeSingleWorkplaceSubtask = async (mIdx, sIdx) => {
                             <td className="border border-black p-2">{cleanTaskName(t.parentMainTaskName)}</td>
                             <td className="border border-black p-2 font-bold">{cleanTaskName(t.workplaceName)}</td>
                             <td className="border border-black p-2 text-center">{config.trainerName || '-'}</td>
-                            <td className="border border-black p-2 text-center font-bold">{t.hours}</td>
+                            <td className="border border-black p-2 text-center font-bold">
+                              {Number((t.hours / (config.hoursPerDay || 8)).toFixed(1))} วัน<br /><span className="text-[8pt] text-slate-600">({t.hours} ชม.)</span>
+                            </td>
                           </tr>
                         ))}
                       </tbody>
@@ -2552,9 +2554,8 @@ const analyzeSingleWorkplaceSubtask = async (mIdx, sIdx) => {
                           <p>ผู้เข้ารับการฝึกระบบทวิภาคี วิทยาลัย {config.collegeName || '................'} ระดับชั้น {config.level || '................'}</p>
                           <p>อาชีพ / ตำแหน่งงานที่ฝึก {config.occupation || '................'}</p>
                           <p className="mt-2 font-bold font-serif">งานหลัก {task.mainTaskIndex}. {cleanTaskName(task.parentMainTaskName) || '................'}</p>
-                          <p className="font-bold text-indigo-700 font-serif">งานย่อย {task.subTaskIndex}. {cleanTaskName(task.workplaceName) || '................'} เวลาฝึก: {task.hours} ชั่วโมง</p>
-                          {!isWorkplaceTrainer && <p>ผลลัพธ์การเรียนรู้: <span className="font-bold font-serif">{cleanTaskName(task.name) || '................'}</span></p>}
-                          <p>ชื่อ-สกุล ครูฝึก {config.trainerName || '................'} ตำแหน่ง {config.trainerPosition || '................'}</p>
+                          <p className="font-bold text-indigo-700 font-serif">งานย่อย {task.subTaskIndex}. {cleanTaskName(task.workplaceName) || '................'} เวลาฝึก: {Number((task.hours / (config.hoursPerDay || 8)).toFixed(1))} วัน ({task.hours} ชั่วโมง)</p>
+                          {!isWorkplaceTrainer && <p>ผลลัพธ์การเรียนรู้: <span className="font-bold font-serif">{cleanTaskName(task.name) || '................'}</span></p>}                          <p>ชื่อ-สกุล ครูฝึก {config.trainerName || '................'} ตำแหน่ง {config.trainerPosition || '................'}</p>
                         </div>
 
                         <table className="w-full text-[9pt] border-collapse border-2 border-black font-serif">
