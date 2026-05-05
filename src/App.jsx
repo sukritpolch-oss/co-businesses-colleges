@@ -1045,18 +1045,77 @@ const App = () => {
   const addSubjectMainTaskLocal = (subIndex) => setSubjects(prev => { const next = [...prev]; if (!next[subIndex].mainTasks) next[subIndex].mainTasks = []; const newId = `${next[subIndex].id}${next[subIndex].mainTasks.length + 1}`; next[subIndex].mainTasks.push({ id: newId, name: '', subTasks: [] }); return next; });
   const removeSubjectMainTaskLocal = (subIndex, mIdx) => { if (!window.confirm("ต้องการลบงานหลักนี้ใช่หรือไม่?")) return; setSubjects(prev => { const next = [...prev]; next[subIndex].mainTasks.splice(mIdx, 1); return next; }); };
   const clearSubjectLocal = (index) => {
-    if (!window.confirm(`ต้องการล้างข้อมูลรายวิชา ${subjectsRef.current[index].id} ทั้งหมดใช่หรือไม่?`)) return;
-    setSubjects(prev => {
-      const next = [...prev];
-      next[index] = {
-        id: next[index].id, code: '', name: '', credits: '', standards: '', learningOutcomes: '',
-        objectives: '', competencies: '', description: '', mainTasks: [],
-        isAnalyzed: false, previewUrl: null, uploadedFile: null
+  if (!window.confirm(`ต้องการลบรายวิชา ${subjectsRef.current[index].id} และขยับลำดับรายวิชาถัดไปขึ้นมาแทนที่ใช่หรือไม่?`)) return;
+
+  let currentSubjects = [...subjects];
+  let idMapping = {};
+
+  // 1. นำวิชาที่เลือกลบออก
+  currentSubjects.splice(index, 1);
+
+  // 2. ขยับลำดับและรหัส ID ของวิชาที่เหลือ
+  currentSubjects = currentSubjects.map((sub, newIndex) => {
+    const expectedId = getSubjectId(newIndex);
+    
+    // หากรหัสวิชาเปลี่ยนไปจากเดิม และวิชานั้นมีข้อมูลอยู่
+    if (sub.id !== expectedId && (sub.isAnalyzed || sub.name || sub.description || sub.uploadedFile)) {
+      const oldId = sub.id;
+      idMapping[oldId] = expectedId; // จดจำว่ารหัสอะไรเปลี่ยนเป็นอะไร (เช่น B -> A)
+
+      return {
+        ...sub,
+        id: expectedId,
+        mainTasks: (sub.mainTasks || []).map(mt => ({
+          ...mt,
+          id: mt.id.replace(new RegExp(`^${oldId}`), expectedId),
+          subTasks: (mt.subTasks || []).map(st => ({
+            ...st,
+            id: st.id.replace(new RegExp(`^${oldId}`), expectedId)
+          }))
+        }))
       };
-      return next;
-    });
-    showStatus(`ล้างข้อมูลรายวิชาสำเร็จ`);
-  };
+    }
+    // ถ้าเป็นช่องว่างที่รอการอัปโหลด หรือรหัสเดิมตรงอยู่แล้ว
+    return { ...sub, id: expectedId };
+  });
+
+  // 3. เติมช่องว่างต่อท้ายให้ครบ 30 วิชาเหมือนเดิม
+  currentSubjects.push({
+    id: getSubjectId(currentSubjects.length),
+    code: '', name: '', credits: '', standards: '', learningOutcomes: '',
+    objectives: '', competencies: '', description: '', mainTasks: [],
+    isAnalyzed: false, previewUrl: null, uploadedFile: null
+  });
+
+  // 4. อัปเดตรหัสอ้างอิงในฝั่งงานสถานประกอบการที่ผูกไว้ให้ตรงกับรหัสวิชาใหม่โดยอัตโนมัติ
+  if (Object.keys(idMapping).length > 0) {
+    const updateMappedIds = (idString) => {
+      if (!idString) return idString;
+      let updatedStr = String(idString);
+      Object.keys(idMapping).forEach(oldKey => {
+        // ค้นหาเฉพาะรหัสที่ตรงเผง เช่น B1-1 จะเปลี่ยนเป็น A1-1
+        const regex = new RegExp(`\\b${oldKey}(\\d+(?:-\\d+)?)\\b`, 'g');
+        updatedStr = updatedStr.replace(regex, `${idMapping[oldKey]}$1`);
+      });
+      return updatedStr;
+    };
+
+    setWorkplaceMainTasks(prev => prev.map(task => ({
+      ...task,
+      subTasks: (task.subTasks || []).map(sub => ({
+        ...sub,
+        id: updateMappedIds(sub.id),
+        detailed_steps: (sub.detailed_steps || []).map(step => ({
+          ...step,
+          subjectTaskId: updateMappedIds(step.subjectTaskId)
+        }))
+      }))
+    })));
+  }
+
+  setSubjects(currentSubjects);
+  showStatus('ลบรายวิชา ขยับลำดับ และอัปเดตการจับคู่งานเรียบร้อยแล้ว!');
+};
   const addWorkplaceMainTask = () => {
     if (workplaceMainTasks.length >= 100) return showStatus("เพิ่มงานหลักได้สูงสุด ๑๐๐ งาน");
     setWorkplaceMainTasks(prev => [...prev, { id: Date.now(), name: '', isAnalyzing: false, isConfirmed: false, subTasks: [] }]);
