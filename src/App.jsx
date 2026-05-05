@@ -154,7 +154,7 @@ const App = () => {
     setStatusMessage(msg);
     setTimeout(() => setStatusMessage(null), 3000);
   }, []);
-// --- เพิ่มระบบ Auto Login เมื่อเปิดเว็บใหม่ หรือกด F5 ---
+  // --- เพิ่มระบบ Auto Login เมื่อเปิดเว็บใหม่ หรือกด F5 ---
   useEffect(() => {
     const savedSession = localStorage.getItem('dve_auth_session');
     if (savedSession) {
@@ -257,10 +257,10 @@ const App = () => {
 
       setConfig(prev => ({
         ...prev,
-        
+
         trainerName: 'Admin Sukritpol'
       }));
-localStorage.setItem('dve_auth_session', JSON.stringify({
+      localStorage.setItem('dve_auth_session', JSON.stringify({
         email: authData.email,
         role: 'admin',
         isDeveloper: true,
@@ -455,13 +455,13 @@ localStorage.setItem('dve_auth_session', JSON.stringify({
 
   const generateFileName = (conf) => {
     let filenameParts = [];
-    
+
     // ดึงชื่อวิทยาลัย
     if (conf.collegeName && conf.collegeName.trim() !== '') filenameParts.push(conf.collegeName.trim());
-    
+
     // ดึงชื่อสถานประกอบการ
     if (conf.companyName && conf.companyName.trim() !== '') filenameParts.push(conf.companyName.trim());
-    
+
     // ดึงแผนกวิชา
     if (conf.fieldOfStudy && conf.fieldOfStudy.trim() !== '') filenameParts.push(conf.fieldOfStudy.trim());
 
@@ -756,8 +756,9 @@ localStorage.setItem('dve_auth_session', JSON.stringify({
         }
 
         if (importedTasks.length > 0) {
-          const normalizedTasks = importedTasks.map(t => (typeof t === 'string' ? { name: t, subTasks: [] } : t));
-          const currentHasData = workplaceMainTasks.length > 0 && workplaceMainTasks.some(t => t.name !== '');
+          const normalizedTasks = importedTasks
+            .filter(t => t !== null && t !== undefined) // กรองตัวที่พังทิ้ง
+            .map(t => (typeof t === 'string' ? { name: t, subTasks: [] } : t)); const currentHasData = workplaceMainTasks.length > 0 && workplaceMainTasks.some(t => t.name !== '');
 
           if (currentHasData) {
             setPendingDveData(normalizedTasks); setShowDveConflictModal(true);
@@ -1100,78 +1101,78 @@ localStorage.setItem('dve_auth_session', JSON.stringify({
 
   const addSubjectMainTaskLocal = (subIndex) => setSubjects(prev => { const next = [...prev]; if (!next[subIndex].mainTasks) next[subIndex].mainTasks = []; const newId = `${next[subIndex].id}${next[subIndex].mainTasks.length + 1}`; next[subIndex].mainTasks.push({ id: newId, name: '', subTasks: [] }); return next; });
   const removeSubjectMainTaskLocal = (subIndex, mIdx) => { if (!window.confirm("ต้องการลบงานหลักนี้ใช่หรือไม่?")) return; setSubjects(prev => { const next = [...prev]; next[subIndex].mainTasks.splice(mIdx, 1); return next; }); };
- const clearSubjectLocal = (index) => {
-  if (!window.confirm(`ต้องการลบรายวิชา ${subjectsRef.current[index].id} และขยับลำดับรายวิชาถัดไปขึ้นมาแทนที่ใช่หรือไม่?`)) return;
+  const clearSubjectLocal = (index) => {
+    if (!window.confirm(`ต้องการลบรายวิชา ${subjectsRef.current[index].id} และขยับลำดับรายวิชาถัดไปขึ้นมาแทนที่ใช่หรือไม่?`)) return;
 
-  let currentSubjects = [...subjects];
-  let idMapping = {};
+    let currentSubjects = [...subjects];
+    let idMapping = {};
 
-  // 1. นำวิชาที่เลือกลบออก
-  currentSubjects.splice(index, 1);
+    // 1. นำวิชาที่เลือกลบออก
+    currentSubjects.splice(index, 1);
 
-  // 2. ขยับลำดับและรหัส ID ของวิชาที่เหลือ
-  currentSubjects = currentSubjects.map((sub, newIndex) => {
-    const expectedId = getSubjectId(newIndex);
-    
-    // หากรหัสวิชาเปลี่ยนไปจากเดิม และวิชานั้นมีข้อมูลอยู่
-    if (sub.id !== expectedId && (sub.isAnalyzed || sub.name || sub.description || sub.uploadedFile)) {
-      const oldId = sub.id;
-      idMapping[oldId] = expectedId; // จดจำว่ารหัสอะไรเปลี่ยนเป็นอะไร (เช่น B -> A)
+    // 2. ขยับลำดับและรหัส ID ของวิชาที่เหลือ
+    currentSubjects = currentSubjects.map((sub, newIndex) => {
+      const expectedId = getSubjectId(newIndex);
 
-      return {
-        ...sub,
-        id: expectedId,
-        mainTasks: (sub.mainTasks || []).map(mt => ({
-          ...mt,
-          id: mt.id.replace(new RegExp(`^${oldId}`), expectedId),
-          subTasks: (mt.subTasks || []).map(st => ({
-            ...st,
-            id: st.id.replace(new RegExp(`^${oldId}`), expectedId)
+      // หากรหัสวิชาเปลี่ยนไปจากเดิม และวิชานั้นมีข้อมูลอยู่
+      if (sub.id !== expectedId && (sub.isAnalyzed || sub.name || sub.description || sub.uploadedFile)) {
+        const oldId = sub.id;
+        idMapping[oldId] = expectedId; // จดจำว่ารหัสอะไรเปลี่ยนเป็นอะไร (เช่น B -> A)
+
+        return {
+          ...sub,
+          id: expectedId,
+          mainTasks: (sub.mainTasks || []).map(mt => ({
+            ...mt,
+            id: mt.id.replace(new RegExp(`^${oldId}`), expectedId),
+            subTasks: (mt.subTasks || []).map(st => ({
+              ...st,
+              id: st.id.replace(new RegExp(`^${oldId}`), expectedId)
+            }))
+          }))
+        };
+      }
+      // ถ้าเป็นช่องว่างที่รอการอัปโหลด หรือรหัสเดิมตรงอยู่แล้ว
+      return { ...sub, id: expectedId };
+    });
+
+    // 3. เติมช่องว่างต่อท้ายให้ครบ 30 วิชาเหมือนเดิม
+    currentSubjects.push({
+      id: getSubjectId(currentSubjects.length),
+      code: '', name: '', credits: '', standards: '', learningOutcomes: '',
+      objectives: '', competencies: '', description: '', mainTasks: [],
+      isAnalyzed: false, previewUrl: null, uploadedFile: null
+    });
+
+    // 4. อัปเดตรหัสอ้างอิงในฝั่งงานสถานประกอบการที่ผูกไว้ให้ตรงกับรหัสวิชาใหม่โดยอัตโนมัติ
+    if (Object.keys(idMapping).length > 0) {
+      const updateMappedIds = (idString) => {
+        if (!idString) return idString;
+        let updatedStr = String(idString);
+        Object.keys(idMapping).forEach(oldKey => {
+          // ค้นหาเฉพาะรหัสที่ตรงเผง เช่น B1-1 จะเปลี่ยนเป็น A1-1
+          const regex = new RegExp(`\\b${oldKey}(\\d+(?:-\\d+)?)\\b`, 'g');
+          updatedStr = updatedStr.replace(regex, `${idMapping[oldKey]}$1`);
+        });
+        return updatedStr;
+      };
+
+      setWorkplaceMainTasks(prev => prev.map(task => ({
+        ...task,
+        subTasks: (task.subTasks || []).map(sub => ({
+          ...sub,
+          id: updateMappedIds(sub.id),
+          detailed_steps: (sub.detailed_steps || []).map(step => ({
+            ...step,
+            subjectTaskId: updateMappedIds(step.subjectTaskId)
           }))
         }))
-      };
+      })));
     }
-    // ถ้าเป็นช่องว่างที่รอการอัปโหลด หรือรหัสเดิมตรงอยู่แล้ว
-    return { ...sub, id: expectedId };
-  });
 
-  // 3. เติมช่องว่างต่อท้ายให้ครบ 30 วิชาเหมือนเดิม
-  currentSubjects.push({
-    id: getSubjectId(currentSubjects.length),
-    code: '', name: '', credits: '', standards: '', learningOutcomes: '',
-    objectives: '', competencies: '', description: '', mainTasks: [],
-    isAnalyzed: false, previewUrl: null, uploadedFile: null
-  });
-
-  // 4. อัปเดตรหัสอ้างอิงในฝั่งงานสถานประกอบการที่ผูกไว้ให้ตรงกับรหัสวิชาใหม่โดยอัตโนมัติ
-  if (Object.keys(idMapping).length > 0) {
-    const updateMappedIds = (idString) => {
-      if (!idString) return idString;
-      let updatedStr = String(idString);
-      Object.keys(idMapping).forEach(oldKey => {
-        // ค้นหาเฉพาะรหัสที่ตรงเผง เช่น B1-1 จะเปลี่ยนเป็น A1-1
-        const regex = new RegExp(`\\b${oldKey}(\\d+(?:-\\d+)?)\\b`, 'g');
-        updatedStr = updatedStr.replace(regex, `${idMapping[oldKey]}$1`);
-      });
-      return updatedStr;
-    };
-
-    setWorkplaceMainTasks(prev => prev.map(task => ({
-      ...task,
-      subTasks: (task.subTasks || []).map(sub => ({
-        ...sub,
-        id: updateMappedIds(sub.id),
-        detailed_steps: (sub.detailed_steps || []).map(step => ({
-          ...step,
-          subjectTaskId: updateMappedIds(step.subjectTaskId)
-        }))
-      }))
-    })));
-  }
-
-  setSubjects(currentSubjects);
-  showStatus('ลบรายวิชา ขยับลำดับ และอัปเดตการจับคู่งานเรียบร้อยแล้ว!');
-};
+    setSubjects(currentSubjects);
+    showStatus('ลบรายวิชา ขยับลำดับ และอัปเดตการจับคู่งานเรียบร้อยแล้ว!');
+  };
   const addWorkplaceMainTask = () => {
     if (workplaceMainTasks.length >= 100) return showStatus("เพิ่มงานหลักได้สูงสุด ๑๐๐ งาน");
     setWorkplaceMainTasks(prev => [...prev, { id: Date.now() + Math.random(), name: '', isAnalyzing: false, isConfirmed: false, subTasks: [] }]);
@@ -1320,7 +1321,8 @@ localStorage.setItem('dve_auth_session', JSON.stringify({
 
       const result = await callAI({ contents: [{ parts: [{ text: `วิเคราะห์งานปฏิบัติสำหรับ: ${taskToAnalyze.name}` }] }], systemInstruction: { parts: [{ text: systemPrompt }] }, generationConfig });
 
-      const newSubTasks = (result.subTasks || []).map((st, i) => {
+      const safeSubTasks = Array.isArray(result.subTasks) ? result.subTasks : [];
+      const newSubTasks = safeSubTasks.map((st, i) => {
         const safeSubTaskId = extractValidTaskIds(st.subjectTaskId);
         return {
           ...st,
@@ -1401,7 +1403,8 @@ localStorage.setItem('dve_auth_session', JSON.stringify({
       setWorkplaceMainTasks(prev => {
         const next = [...prev];
         // นำขั้นตอนใหม่ที่ AI คิดมาใส่แทนที่เดิมทั้งหมด
-        next[mIdx].subTasks[sIdx].detailed_steps = (result.detailed_steps || []).map(step => ({
+        const safeSteps = Array.isArray(result.detailed_steps) ? result.detailed_steps : [];
+        next[mIdx].subTasks[sIdx].detailed_steps = safeSteps.map(step => ({
           ...step,
           subjectTaskId: extractValidTaskIds(step.subjectTaskId)
         }));
@@ -3324,7 +3327,8 @@ localStorage.setItem('dve_auth_session', JSON.stringify({
                               return workplaceTasksFlat.some(wt => {
                                 const ids = String(wt.id || '').split(',').map(i => i.trim().toUpperCase());
                                 const stepIds = (wt.detailed_steps || []).flatMap(s => String(s.subjectTaskId || '').split(',').map(i => i.trim().toUpperCase()));
-                                return ids.includes(st.id.toUpperCase()) || stepIds.includes(st.id.toUpperCase());
+                                const safeStId = String(st.id || '').toUpperCase();
+                                return ids.includes(safeStId) || stepIds.includes(safeStId);
                               });
                             });
 
