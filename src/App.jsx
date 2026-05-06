@@ -1089,10 +1089,10 @@ const App = () => {
           return n;
         });
         showStatus(`วิเคราะห์วิชา ${latestSub.id} สำเร็จ`);
-        await new Promise(res => setTimeout(res, 3000));
+        await new Promise(res => setTimeout(res, 2000));
       } catch (e) {
         showStatus(`วิชา ${subjectsRef.current[idx].id} ขัดข้อง: ${e.message}`);
-        await new Promise(res => setTimeout(res, 4000));
+        await new Promise(res => setTimeout(res, 3000));
       }
     }
     setIsAnalyzingSubject(false); setCurrentIdx(null);
