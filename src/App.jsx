@@ -514,23 +514,41 @@ const App = () => {
   };
 
   const loadFromCloudItem = (item) => {
-    if (window.confirm('คำเตือน: การนำเข้าข้อมูลจากคลาวด์จะทับข้อมูลปัจจุบันของคุณที่กำลังทำอยู่ทั้งหมด ต้องการดำเนินการต่อหรือไม่?')) {
-      setConfig(prev => ({
-        ...(item.config || config),
-        userApiKey: prev.userApiKey, openaiApiKey: prev.openaiApiKey, claudeApiKey: prev.claudeApiKey, deepseekApiKey: prev.deepseekApiKey
-      }));
-      setWorkplaceMainTasks(item.workplaceMainTasks || []);
-      setSelectedBehaviors(item.selectedBehaviors || BEHAVIOR_OPTIONS);
+    // 1. ดึงข้อมูลงานจากคลังคลาวด์
+    const importedTasks = item.workplaceMainTasks || [];
+    
+    // 2. บังคับตั้งค่าให้งานทุกตัว "ถูกล็อค (ยืนยันแล้ว)" ห้ามแก้ไขและห้ามวิเคราะห์ใหม่
+    const lockedTasks = importedTasks.map(t => ({
+      ...t,
+      isConfirmed: true 
+    }));
 
-      if (isDeveloper) {
-        setEditingCloudId(item.id);
-        showStatus('เข้าสู่โหมดแก้ไขข้อมูลคลาวด์ (Admin)');
-      } else {
-        setEditingCloudId(null);
-        showStatus('นำเข้าข้อมูลจากคลังกลางสำเร็จ!');
-      }
-      setActiveTab('workplace');
+    if (isDeveloper) {
+      setEditingCloudId(item.id);
+      showStatus('เข้าสู่โหมดแก้ไขข้อมูลคลาวด์ (Admin)');
+    } else {
+      setEditingCloudId(null);
+      showStatus('นำเข้าข้อมูลสำเร็จ (เพิ่มต่อท้ายและล็อคข้อมูลเรียบร้อย)');
     }
+
+    // 3. นำข้อมูลงานไป "ต่อท้าย (Append)" งานที่มีอยู่บนหน้าจอ โดยไม่ลบงานเดิม
+    if (lockedTasks.length > 0) {
+      executeApplyDveData(lockedTasks, 'append');
+      
+      // (ทางเลือกเสริม) อัปเดตชื่อสถานประกอบการและจังหวัดให้อัตโนมัติ โดยไม่ทับข้อมูลครู/วิทยาลัย
+      if (item.config) {
+        setConfig(prev => ({
+          ...prev,
+          companyName: item.config.companyName || prev.companyName,
+          province: item.config.province || prev.province
+        }));
+      }
+    } else {
+      showStatus('ไม่พบข้อมูลงานในแผนฝึกนี้');
+    }
+
+    // 4. เปลี่ยนหน้าจอกลับไปที่แท็บงานบริษัทให้อัตโนมัติ
+    setActiveTab('workplace');
   };
 
   const executeApplyDveData = (parsedData, mode) => {
