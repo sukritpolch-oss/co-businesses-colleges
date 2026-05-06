@@ -1000,7 +1000,6 @@ const runSubjectAnalysis = async (sub) => {
     4. ห้ามใช้คำว่า ศึกษา, เรียนรู้, ทฤษฎี ในการกำหนดชื่องานปฏิบัติโดยเด็ดขาด ให้แปลงเป็นคำกริยาทางปฏิบัติการทั้งหมด (เช่น ตรวจสอบ, บำรุงรักษา, ปฏิบัติงาน)`;
 
     let textPrompt = sub.description ? `สกัดข้อมูลและวิเคราะห์งานสำหรับวิชา ${sub.id} จากข้อความนี้:\n${sub.description}` : `สกัดข้อมูลและวิเคราะห์งานสำหรับวิชา ${sub.id}`;
-    let textPrompt = sub.description ? `สกัดข้อมูลและวิเคราะห์งานสำหรับวิชา ${sub.id} จากข้อความนี้:\n${sub.description}` : `สกัดข้อมูลและวิเคราะห์งานสำหรับวิชา ${sub.id}`;
     let parts = [{ text: textPrompt }];
 
     if (sub.uploadedFile) {
