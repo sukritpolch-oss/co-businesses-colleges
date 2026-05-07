@@ -826,7 +826,7 @@ const App = () => {
         province: config.province,
         creatorName: config.trainerName,
         level: config.level,
-        planName: finalPlanName, 
+        planName: finalPlanName,
         mainTaskSummary: mainTaskSummary,
         createdAtStr: new Date().toISOString()
       };
@@ -3702,8 +3702,17 @@ ${pool.length > 0 ? `**สำคัญมาก (การจับคู่ร�
                               <p className="text-xs font-bold text-slate-600 flex items-center gap-2"><MapPin size={14} className="text-rose-500" /> {item.province || 'ไม่ระบุจังหวัด'}</p>
                               <p className="text-xs font-bold text-slate-600 flex items-center gap-2"><User size={14} className="text-indigo-500" /> ระดับ: {item.level || item.config?.level || 'ไม่ระบุ'}</p>
                               <p className="text-xs font-bold text-slate-600 flex items-center gap-2"><User size={14} className="text-blue-500" /> จัดทำโดย: {item.creatorName || 'ไม่ระบุ'}</p>
-                              <p className="text-[10px] text-slate-400 flex items-center gap-2 mt-2"><Clock size={12} /> อัปโหลดเมื่อ: {item.createdAt?.toDate ? item.createdAt.toDate().toLocaleDateString('th-TH') : 'ไม่ระบุ'}</p>
-
+                              <p className="text-[10px] text-slate-400 flex items-center gap-2 mt-2">
+                                <Clock size={12} /> อัปโหลดเมื่อ: {item.createdAtStr
+                                  ? new Date(item.createdAtStr).toLocaleString('th-TH', {
+                                    year: 'numeric',
+                                    month: 'short',
+                                    day: 'numeric',
+                                    hour: '2-digit',
+                                    minute: '2-digit'
+                                  }) + ' น.'
+                                  : 'ไม่ระบุ'}
+                              </p>
                               {item.deleteRequest && (
                                 <div className="mt-3 bg-orange-100 border border-orange-200 text-orange-800 text-[10px] p-2 rounded-xl font-bold flex flex-col gap-2">
                                   <div className="flex items-start gap-1.5">
