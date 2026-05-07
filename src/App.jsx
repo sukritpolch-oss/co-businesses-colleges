@@ -826,7 +826,9 @@ const App = () => {
         province: config.province,
         creatorName: config.trainerName,
         level: config.level,
-        mainTaskSummary: mainTaskSummary // ส่งค่าชื่องานหลักไปด้วย
+        planName: finalPlanName, 
+        mainTaskSummary: mainTaskSummary,
+        createdAtStr: new Date().toISOString()
       };
 
       await fetch(GAS_WEB_APP_URL, {
