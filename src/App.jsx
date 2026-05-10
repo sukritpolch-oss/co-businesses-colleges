@@ -8,7 +8,7 @@ import {
   Wand2, HardHat, Briefcase, FileSearch, Printer, BookOpen,
   RefreshCw, RotateCcw, ArrowRightCircle, ListChecks, CheckSquare, Sparkles, Calendar,
   Lock, Code, LogOut, Key, Mail, MapPin, BadgeCheck, Users, ShieldCheck, Star, Save,
-  Cloud, Search, Filter, UploadCloud, DownloadCloud, MessageSquare, Unlock, ShieldAlert, Edit
+  Cloud, Search, Filter, UploadCloud, DownloadCloud, MessageSquare, Unlock, ShieldAlert, Edit, Library
 } from 'lucide-react';
 
 const apiKey = "";
