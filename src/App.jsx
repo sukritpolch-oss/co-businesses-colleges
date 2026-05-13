@@ -11,17 +11,17 @@ import {
   Cloud, Search, Filter, UploadCloud, DownloadCloud, MessageSquare, Unlock, ShieldAlert, Edit, Library
 } from 'lucide-react';
 if (!Array.prototype.flatMap) {
-  Array.prototype.flatMap = function(callback, thisArg) {
-    return this.map(callback, thisArg).reduce(function(acc, val) {
+  Array.prototype.flatMap = function (callback, thisArg) {
+    return this.map(callback, thisArg).reduce(function (acc, val) {
       return acc.concat(val);
     }, []);
   };
 }
 
 if (!Array.prototype.flat) {
-  Array.prototype.flat = function(depth) {
+  Array.prototype.flat = function (depth) {
     var d = depth !== undefined ? depth : 1;
-    return d > 0 ? this.reduce(function(acc, val) {
+    return d > 0 ? this.reduce(function (acc, val) {
       return acc.concat(Array.isArray(val) ? val.flat(d - 1) : val);
     }, []) : this.slice();
   };
@@ -151,15 +151,6 @@ const App = () => {
   const [workplaceMainTasks, setWorkplaceMainTasks] = useState([
     { id: Date.now(), name: '', isAnalyzing: false, isConfirmed: false, subTasks: [] }
   ]);
-
-  // ฟังก์ชันดักจับ Object/Array ไม่ให้หลุดไปทำ React พัง (ป้องกันจอขาว)
-  const safeText = (val, fallback = '-') => {
-    if (val === null || val === undefined || val === '') return fallback;
-    if (typeof val === 'object') {
-      try { return JSON.stringify(val); } catch (e) { return fallback; }
-    }
-    return String(val);
-  };
 
   const cleanTaskName = (name) => {
     if (!name) return '';
@@ -746,20 +737,20 @@ const App = () => {
         }
         currentTasks.push(taskToAdd);
       });
-// ฟังก์ชันทำความสะอาดข้อมูลงานหลัก/งานย่อย ป้องกันจอขาวจาก AI ส่ง null
-  const sanitizeMainTasks = (aiTasks, fallbackTasks) => {
-    if (!Array.isArray(aiTasks) || aiTasks.length === 0) return fallbackTasks;
-    return aiTasks.filter(mt => mt != null).map(mt => ({
-      ...mt,
-      id: String(mt.id || ''),
-      name: String(mt.name || ''),
-      subTasks: Array.isArray(mt.subTasks) ? mt.subTasks.filter(st => st != null).map(st => ({
-        ...st,
-        id: String(st.id || ''),
-        name: String(st.name || '')
-      })) : []
-    }));
-  };
+      // ฟังก์ชันทำความสะอาดข้อมูลงานหลัก/งานย่อย ป้องกันจอขาวจาก AI ส่ง null
+      const sanitizeMainTasks = (aiTasks, fallbackTasks) => {
+        if (!Array.isArray(aiTasks) || aiTasks.length === 0) return fallbackTasks;
+        return aiTasks.filter(mt => mt != null).map(mt => ({
+          ...mt,
+          id: String(mt.id || ''),
+          name: String(mt.name || ''),
+          subTasks: Array.isArray(mt.subTasks) ? mt.subTasks.filter(st => st != null).map(st => ({
+            ...st,
+            id: String(st.id || ''),
+            name: String(st.name || '')
+          })) : []
+        }));
+      };
       setWorkplaceMainTasks(currentTasks);
       showStatus('รวมข้อมูลวิชาและงานสำเร็จ โดยคงการตั้งค่าของระบบเดิมไว้!');
     }
@@ -1752,10 +1743,10 @@ ${pool.length > 0 ? `**สำคัญมาก (การจับคู่ร�
     const allSubTasks = subjects.filter(s => s.isAnalyzed).flatMap(s => {
       const safeMainTasks = Array.isArray(s.mainTasks) ? s.mainTasks : [];
       return safeMainTasks.flatMap(mt => {
-         const safeSubTasks = Array.isArray(mt.subTasks) ? mt.subTasks : [];
-         return safeSubTasks.map(st => ({
-           ...st, subjectId: s.id, subjectName: s.name, mainTaskName: cleanTaskName(mt.name), mainTaskId: mt.id
-         }));
+        const safeSubTasks = Array.isArray(mt.subTasks) ? mt.subTasks : [];
+        return safeSubTasks.map(st => ({
+          ...st, subjectId: s.id, subjectName: s.name, mainTaskName: cleanTaskName(mt.name), mainTaskId: mt.id
+        }));
       });
     });
 
@@ -1763,8 +1754,8 @@ ${pool.length > 0 ? `**สำคัญมาก (การจับคู่ร�
     workplaceTasksFlat.forEach(wt => {
       if (wt.id) String(wt.id).split(',').forEach(id => mappedIdsSet.add(id.trim().toUpperCase()));
       if (Array.isArray(wt.detailed_steps)) {
-        wt.detailed_steps.forEach(step => { 
-           if (step.subjectTaskId) String(step.subjectTaskId).split(',').forEach(id => mappedIdsSet.add(id.trim().toUpperCase())); 
+        wt.detailed_steps.forEach(step => {
+          if (step.subjectTaskId) String(step.subjectTaskId).split(',').forEach(id => mappedIdsSet.add(id.trim().toUpperCase()));
         });
       }
     });
@@ -1810,7 +1801,7 @@ ${pool.length > 0 ? `**สำคัญมาก (การจับคู่ร�
 
     // ดักจับกรณี AI ส่งค่ามาเป็น Object แทนที่จะเป็นข้อความ ป้องกันการเกิด error: text.split is not a function
     const safeText = typeof text === 'object' ? JSON.stringify(text) : String(text);
-    
+
     const parts = safeText.split(/(?=\b\d{1,2}\.(?!\d))/g).filter(p => p.trim());
 
     if (parts.length <= 1) return <div className="whitespace-pre-line">{safeText}</div>;
@@ -2685,7 +2676,7 @@ ${pool.length > 0 ? `**สำคัญมาก (การจับคู่ร�
 
                             <div className={`mt-3 space-y-2 font-serif ${collapsedWorkplaceSubTasks.has(sub.id) ? 'hidden' : 'block'}`}>
                               <p className={`text-[10px] font-black uppercase border-b pb-1 font-serif ${main.isConfirmed ? 'text-green-600 border-green-100' : 'text-indigo-400 border-indigo-50'}`}>ขั้นตอนการปฏิบัติงาน:</p>
-                              {(Array.isArray(sub.detailed_steps) ? sub.detailed_steps : []).map((step, si) => (
+                              {sub.detailed_steps?.map((step, si) => (
                                 <div key={si} className="flex items-start gap-2 text-[11px] text-slate-600 pl-2 border-l-2 border-slate-100 leading-relaxed font-serif group">
                                   <span className="mt-1.5 font-bold">{si + 1}.</span>
                                   <div className="flex-1 flex flex-col gap-1">
@@ -3157,20 +3148,20 @@ ${pool.length > 0 ? `**สำคัญมาก (การจับคู่ร�
                             </tr>
                           </thead>
                           <tbody>
-                            {(Array.isArray(task.detailed_steps) ? task.detailed_steps : []).map((step, si) => (
+                            {(task.detailed_steps || []).map((step, si) => (
                               <tr key={si} className="align-top leading-tight font-serif">
                                 <td className="border border-black p-1 text-center font-bold">{si + 1}</td>
                                 <td className="border border-black p-1 font-bold leading-relaxed">{step.step_text}</td>
                                 <td className="border border-black p-1 space-y-1 text-[8pt] font-serif">
-  <p><b>K:</b> {safeText(step.objectives?.k)}</p>
-  <p><b>S:</b> {safeText(step.objectives?.s)}</p>
-  <p><b>A:</b> {safeText(step.objectives?.a)}</p>
-  <p><b>Ap:</b> {safeText(step.objectives?.ap)}</p>
-</td>
-<td className="border border-black p-1 text-center font-bold text-blue-900">K{safeText(step.levels?.k, '1')}</td>
-<td className="border border-black p-1 text-center font-bold text-green-900">S{safeText(step.levels?.s, '1')}</td>
-<td className="border border-black p-1 text-center font-bold text-amber-900">A{safeText(step.levels?.a, '1')}</td>
-<td className="border border-black p-1 text-center font-bold text-purple-900">Ap{safeText(step.levels?.ap, '1')}</td>
+                                  <p><b>K:</b> {step.objectives?.k || '-'}</p>
+                                  <p><b>S:</b> {step.objectives?.s || '-'}</p>
+                                  <p><b>A:</b> {step.objectives?.a || '-'}</p>
+                                  <p><b>Ap:</b> {step.objectives?.ap || '-'}</p>
+                                </td>
+                                <td className="border border-black p-1 text-center font-bold text-blue-900">K{step.levels?.k || 1}</td>
+                                <td className="border border-black p-1 text-center font-bold text-green-900">S{step.levels?.s || 1}</td>
+                                <td className="border border-black p-1 text-center font-bold text-amber-900">A{step.levels?.a || 1}</td>
+                                <td className="border border-black p-1 text-center font-bold text-purple-900">Ap{step.levels?.ap || 1}</td>
                                 <td className="border border-black p-1 text-[8pt] text-center">สาธิต/ปฏิบัติ</td>
                                 <td className="border border-black p-1 text-[8pt] text-left leading-relaxed">{step.equipment || 'ของจริง / คู่มือ'}</td>
                                 <td className="border border-black p-1 text-[8pt] text-center">สังเกตพฤติกรรม</td>
