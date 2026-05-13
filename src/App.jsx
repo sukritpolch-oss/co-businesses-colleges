@@ -10,23 +10,6 @@ import {
   Lock, Code, LogOut, Key, Mail, MapPin, BadgeCheck, Users, ShieldCheck, Star, Save,
   Cloud, Search, Filter, UploadCloud, DownloadCloud, MessageSquare, Unlock, ShieldAlert, Edit, Library
 } from 'lucide-react';
-if (!Array.prototype.flatMap) {
-  Array.prototype.flatMap = function (callback, thisArg) {
-    return this.map(callback, thisArg).reduce(function (acc, val) {
-      return acc.concat(val);
-    }, []);
-  };
-}
-
-if (!Array.prototype.flat) {
-  Array.prototype.flat = function (depth) {
-    var d = depth !== undefined ? depth : 1;
-    return d > 0 ? this.reduce(function (acc, val) {
-      return acc.concat(Array.isArray(val) ? val.flat(d - 1) : val);
-    }, []) : this.slice();
-  };
-}
-// =====================================================================
 
 const apiKey = "";
 
@@ -154,16 +137,14 @@ const App = () => {
 
   const cleanTaskName = (name) => {
     if (!name) return '';
-    let cleaned = String(name).replace(/ศึกษา|เรียนรู้|ทฤษฎี/g, '').trim();
+    let cleaned = name.replace(/ศึกษา|เรียนรู้|ทฤษฎี/g, '').trim();
     if (cleaned.startsWith('การ')) cleaned = cleaned.substring(3).trim();
     return cleaned;
   };
 
   const extractValidTaskIds = (text) => {
     if (!text) return '';
-    // ดักจับและแปลง Object ให้เป็น String เสมอ ป้องกันจอขาวจาก .match()
-    let strText = typeof text === 'object' ? JSON.stringify(text) : String(text);
-    const matches = strText.match(/[A-Za-z]{1,2}\d{1,2}(?:-\d{1,2})?/g);
+    const matches = String(text).match(/[A-Za-z]{1,2}\d{1,2}(?:-\d{1,2})?/g);
     if (matches) return [...new Set(matches)].slice(0, 4).join(', ');
     return '';
   };
@@ -737,20 +718,7 @@ const App = () => {
         }
         currentTasks.push(taskToAdd);
       });
-      // ฟังก์ชันทำความสะอาดข้อมูลงานหลัก/งานย่อย ป้องกันจอขาวจาก AI ส่ง null
-      const sanitizeMainTasks = (aiTasks, fallbackTasks) => {
-        if (!Array.isArray(aiTasks) || aiTasks.length === 0) return fallbackTasks;
-        return aiTasks.filter(mt => mt != null).map(mt => ({
-          ...mt,
-          id: String(mt.id || ''),
-          name: String(mt.name || ''),
-          subTasks: Array.isArray(mt.subTasks) ? mt.subTasks.filter(st => st != null).map(st => ({
-            ...st,
-            id: String(st.id || ''),
-            name: String(st.name || '')
-          })) : []
-        }));
-      };
+
       setWorkplaceMainTasks(currentTasks);
       showStatus('รวมข้อมูลวิชาและงานสำเร็จ โดยคงการตั้งค่าของระบบเดิมไว้!');
     }
@@ -1232,7 +1200,7 @@ const App = () => {
           code: result.courseInfo?.code || sub.code || '', name: result.courseInfo?.name || sub.name || '', credits: result.courseInfo?.credits || sub.credits || '',
           standards: result.courseInfo?.standards || sub.standards || '', learningOutcomes: result.courseInfo?.learningOutcomes || sub.learningOutcomes || '',
           objectives: result.courseInfo?.objectives || sub.objectives || '', competencies: result.courseInfo?.competencies || sub.competencies || '',
-          description: result.courseInfo?.description || sub.description || '', mainTasks: sanitizeMainTasks(result.mainTasks, sub.mainTasks),
+          description: result.courseInfo?.description || sub.description || '', mainTasks: (result.mainTasks && result.mainTasks.length > 0) ? result.mainTasks : sub.mainTasks,
           isAnalyzed: true
         };
         return n;
@@ -1263,7 +1231,7 @@ const App = () => {
         const result = await runSubjectAnalysis(latestSub);
         setSubjects(prev => {
           const n = [...prev];
-          n[idx] = { ...n[idx], code: result.courseInfo?.code || n[idx].code || '', name: result.courseInfo?.name || n[idx].name || '', credits: result.courseInfo?.credits || n[idx].credits || '', standards: result.courseInfo?.standards || n[idx].standards || '', learningOutcomes: result.courseInfo?.learningOutcomes || n[idx].learningOutcomes || '', objectives: result.courseInfo?.objectives || n[idx].objectives || '', competencies: result.courseInfo?.competencies || n[idx].competencies || '', description: result.courseInfo?.description || n[idx].description || '', mainTasks: sanitizeMainTasks(result.mainTasks, n[idx].mainTasks), isAnalyzed: true };
+          n[idx] = { ...n[idx], code: result.courseInfo?.code || n[idx].code || '', name: result.courseInfo?.name || n[idx].name || '', credits: result.courseInfo?.credits || n[idx].credits || '', standards: result.courseInfo?.standards || n[idx].standards || '', learningOutcomes: result.courseInfo?.learningOutcomes || n[idx].learningOutcomes || '', objectives: result.courseInfo?.objectives || n[idx].objectives || '', competencies: result.courseInfo?.competencies || n[idx].competencies || '', description: result.courseInfo?.description || n[idx].description || '', mainTasks: (result.mainTasks && result.mainTasks.length > 0) ? result.mainTasks : n[idx].mainTasks, isAnalyzed: true };
           return n;
         });
         showStatus(`วิเคราะห์วิชา ${latestSub.id} สำเร็จ`);
@@ -1512,7 +1480,7 @@ ${pool.length > 0 ? `2. **สำคัญมาก (การจับคู่�
 
       const result = await callAI({ contents: [{ parts: [{ text: `วิเคราะห์งานปฏิบัติสำหรับ: ${taskToAnalyze.name}` }] }], systemInstruction: { parts: [{ text: systemPrompt }] }, generationConfig });
 
-      const safeSubTasks = Array.isArray(result.subTasks) ? result.subTasks.filter(st => st != null) : [];
+      const safeSubTasks = Array.isArray(result.subTasks) ? result.subTasks : [];
       const newSubTasks = safeSubTasks.map((st, i) => {
         const safeSubTaskId = extractValidTaskIds(st.subjectTaskId);
         return {
@@ -1610,7 +1578,7 @@ ${pool.length > 0 ? `**สำคัญมาก (การจับคู่ร�
       setWorkplaceMainTasks(prev => {
         const next = [...prev];
         // นำขั้นตอนใหม่ที่ AI คิดมาใส่แทนที่เดิมทั้งหมด
-        const safeSteps = Array.isArray(result.detailed_steps) ? result.detailed_steps.filter(step => step != null) : [];
+        const safeSteps = Array.isArray(result.detailed_steps) ? result.detailed_steps : [];
         next[mIdx].subTasks[sIdx].detailed_steps = safeSteps.map(step => ({
           ...step,
           subjectTaskId: extractValidTaskIds(step.subjectTaskId)
@@ -1730,33 +1698,21 @@ ${pool.length > 0 ? `**สำคัญมาก (การจับคู่ร�
   }, [trainingDuration, config.level]);
 
   const workplaceTasksFlat = useMemo(() => {
-    return workplaceMainTasks.flatMap((m, mIdx) => {
-      // ป้องกันกรณี m.subTasks ไม่ใช่ Array
-      const safeSubTasks = Array.isArray(m.subTasks) ? m.subTasks : [];
-      return safeSubTasks.map((s, sIdx) => ({
-        ...s, parentMainTaskName: cleanTaskName(m.name), mainTaskIndex: mIdx + 1, subTaskIndex: `${mIdx + 1}.${sIdx + 1}`
-      }));
-    });
+    return workplaceMainTasks.flatMap((m, mIdx) => (m.subTasks || []).map((s, sIdx) => ({
+      ...s, parentMainTaskName: cleanTaskName(m.name), mainTaskIndex: mIdx + 1, subTaskIndex: `${mIdx + 1}.${sIdx + 1}`
+    })));
   }, [workplaceMainTasks]);
 
   const unmappedTasks = useMemo(() => {
-    const allSubTasks = subjects.filter(s => s.isAnalyzed).flatMap(s => {
-      const safeMainTasks = Array.isArray(s.mainTasks) ? s.mainTasks : [];
-      return safeMainTasks.flatMap(mt => {
-        const safeSubTasks = Array.isArray(mt.subTasks) ? mt.subTasks : [];
-        return safeSubTasks.map(st => ({
-          ...st, subjectId: s.id, subjectName: s.name, mainTaskName: cleanTaskName(mt.name), mainTaskId: mt.id
-        }));
-      });
-    });
+    const allSubTasks = subjects.filter(s => s.isAnalyzed).flatMap(s => (s.mainTasks || []).flatMap(mt => (mt.subTasks || []).map(st => ({
+      ...st, subjectId: s.id, subjectName: s.name, mainTaskName: cleanTaskName(mt.name), mainTaskId: mt.id
+    }))));
 
     const mappedIdsSet = new Set();
     workplaceTasksFlat.forEach(wt => {
       if (wt.id) String(wt.id).split(',').forEach(id => mappedIdsSet.add(id.trim().toUpperCase()));
-      if (Array.isArray(wt.detailed_steps)) {
-        wt.detailed_steps.forEach(step => {
-          if (step.subjectTaskId) String(step.subjectTaskId).split(',').forEach(id => mappedIdsSet.add(id.trim().toUpperCase()));
-        });
+      if (wt.detailed_steps) {
+        wt.detailed_steps.forEach(step => { if (step.subjectTaskId) String(step.subjectTaskId).split(',').forEach(id => mappedIdsSet.add(id.trim().toUpperCase())); });
       }
     });
 
@@ -1799,12 +1755,13 @@ ${pool.length > 0 ? `**สำคัญมาก (การจับคู่ร�
   const formatNumberedText = (text) => {
     if (!text) return '................................................................................................\n................................................................................................';
 
-    // ดักจับกรณี AI ส่งค่ามาเป็น Object แทนที่จะเป็นข้อความ ป้องกันการเกิด error: text.split is not a function
-    const safeText = typeof text === 'object' ? JSON.stringify(text) : String(text);
+    // อัปเดตเงื่อนไข Regex: 
+    // \b = ป้องกันการตัดเลขที่อยู่กลางคำ
+    // \d{1,2}\. = หาตัวเลข 1-2 หลักที่ตามด้วยจุด
+    // (?!\d) = "Negative Lookahead" บังคับว่าตัวอักษรที่ตามหลังจุด 'ต้องไม่ใช่ตัวเลข' (เพื่อข้ามรหัสเช่น 1.01)
+    const parts = text.split(/(?=\b\d{1,2}\.(?!\d))/g).filter(p => p.trim());
 
-    const parts = safeText.split(/(?=\b\d{1,2}\.(?!\d))/g).filter(p => p.trim());
-
-    if (parts.length <= 1) return <div className="whitespace-pre-line">{safeText}</div>;
+    if (parts.length <= 1) return <div className="whitespace-pre-line">{text}</div>;
 
     return (
       <div className="space-y-1.5 mt-1">
