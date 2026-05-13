@@ -10,6 +10,23 @@ import {
   Lock, Code, LogOut, Key, Mail, MapPin, BadgeCheck, Users, ShieldCheck, Star, Save,
   Cloud, Search, Filter, UploadCloud, DownloadCloud, MessageSquare, Unlock, ShieldAlert, Edit, Library
 } from 'lucide-react';
+if (!Array.prototype.flatMap) {
+  Array.prototype.flatMap = function(callback, thisArg) {
+    return this.map(callback, thisArg).reduce(function(acc, val) {
+      return acc.concat(val);
+    }, []);
+  };
+}
+
+if (!Array.prototype.flat) {
+  Array.prototype.flat = function(depth) {
+    var d = depth !== undefined ? depth : 1;
+    return d > 0 ? this.reduce(function(acc, val) {
+      return acc.concat(Array.isArray(val) ? val.flat(d - 1) : val);
+    }, []) : this.slice();
+  };
+}
+// =====================================================================
 
 const apiKey = "";
 
