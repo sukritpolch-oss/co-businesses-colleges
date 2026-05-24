@@ -125,16 +125,40 @@ const App = () => {
     return 'A' + String.fromCharCode(65 + (index - 26));
   };
 
-  const [subjects, setSubjects] = useState(Array.from({ length: 30 }, (_, i) => ({
-    id: getSubjectId(i), code: '', name: '', credits: '', standards: '', learningOutcomes: '', objectives: '', competencies: '', description: '', mainTasks: [], isAnalyzed: false, previewUrl: null, uploadedFile: null
-  })));
+  const createEmptySubjects = () => Array.from({ length: 30 }, (_, i) => ({
+    id: getSubjectId(i),
+    code: '',
+    name: '',
+    credits: '',
+    standards: '',
+    learningOutcomes: '',
+    objectives: '',
+    competencies: '',
+    description: '',
+    mainTasks: [],
+    isAnalyzed: false,
+    previewUrl: null,
+    uploadedFile: null
+  }));
+
+  const [subjects, setSubjects] = useState(createEmptySubjects);
   const subjectsRef = useRef(subjects);
   useEffect(() => { subjectsRef.current = subjects; }, [subjects]);
 
   const [workplaceMainTasks, setWorkplaceMainTasks] = useState([
     { id: Date.now(), name: '', isAnalyzing: false, isConfirmed: false, subTasks: [] }
   ]);
-
+  const resetWorkspaceData = () => {
+    setSubjects(createEmptySubjects());
+    setWorkplaceMainTasks([
+      { id: Date.now(), name: '', isAnalyzing: false, isConfirmed: false, subTasks: [] }
+    ]);
+    setSelectedBehaviors([...BEHAVIOR_OPTIONS]);
+    setPendingDveData(null);
+    setShowDveConflictModal(false);
+    setEditingCloudId(null);
+    setActiveTab('setup');
+  };
   const cleanTaskName = (name) => {
     if (!name) return '';
     // ลบเฉพาะคำที่ไม่ต้องการให้เป็นงานปฏิบัติการ
@@ -164,10 +188,12 @@ const App = () => {
     if (savedSession) {
       try {
         const userData = JSON.parse(savedSession);
+
         setIsAuthenticated(true);
         setIsDeveloper(userData.isDeveloper || false);
-        setCurrentUserEmail(userData.email);
-        setCurrentUserRole(userData.role);
+        setCurrentUserEmail(userData.email || '');
+        setCurrentUserRole(userData.role || 'ครู');
+        resetWorkspaceData();
 
         setConfig(prev => ({
           ...prev,
@@ -258,7 +284,7 @@ const App = () => {
       setLoginError('');
       setCurrentUserEmail(authData.email);
       setCurrentUserRole('admin'); // กำหนดให้ Role เป็น admin เพื่อไม่ให้โดนมองว่าเป็นครูฝึก
-
+      resetWorkspaceData();
       setConfig(prev => ({
         ...prev,
 
@@ -294,7 +320,7 @@ const App = () => {
     setLoginError('');
     setCurrentUserEmail(userByEmail.email);
     setCurrentUserRole(userByEmail.role || 'ครู');
-
+    resetWorkspaceData();
     const trainerName = `${userByEmail.firstName || ''} ${userByEmail.lastName || ''}`.trim();
 
     // ดึงข้อมูลจากฐานข้อมูลมาใส่ใน Config ทันที
@@ -561,14 +587,40 @@ const App = () => {
         ? JSON.parse(item.dataPayload)
         : item.dataPayload || item;
 
-      if (parsedData.config) {
-        parsedData.config = {
-          ...parsedData.config,
-          collegeName: item.college || parsedData.config.collegeName || '',
-          companyName: item.company || parsedData.config.companyName || '',
-          province: item.province || parsedData.config.province || ''
-        };
-      }
+      const normalizedSubjects = Array.isArray(parsedData.subjects)
+        ? parsedData.subjects.map((s, i) => ({
+          id: s.id || getSubjectId(i),
+          code: s.code || '',
+          name: s.name || '',
+          credits: s.credits || '',
+          standards: s.standards || '',
+          learningOutcomes: s.learningOutcomes || '',
+          objectives: s.objectives || '',
+          competencies: s.competencies || '',
+          description: s.description || '',
+          mainTasks: Array.isArray(s.mainTasks) ? s.mainTasks : [],
+          isAnalyzed: Boolean(
+            s.isAnalyzed ||
+            s.name ||
+            s.description ||
+            (Array.isArray(s.mainTasks) && s.mainTasks.length > 0)
+          ),
+          previewUrl: null,
+          uploadedFile: null
+        }))
+        : [];
+
+      parsedData.subjects = [
+        ...normalizedSubjects,
+        ...createEmptySubjects().slice(normalizedSubjects.length)
+      ].slice(0, 30);
+
+      parsedData.config = {
+        ...(parsedData.config || {}),
+        collegeName: item.college || parsedData.config?.collegeName || '',
+        companyName: item.company || parsedData.config?.companyName || '',
+        province: item.province || parsedData.config?.province || ''
+      };
 
       const currentHasData =
         (workplaceMainTasks.length > 0 && workplaceMainTasks.some(t => t.name?.trim())) ||
@@ -579,7 +631,7 @@ const App = () => {
         setShowDveConflictModal(true);
       } else {
         executeApplyDveData(parsedData, 'overwrite');
-        setActiveTab('setup');
+        setActiveTab('subjects'); // ไปดูรายวิชา A/B/C ทันที
       }
     } catch (e) {
       console.error(e);
@@ -613,7 +665,19 @@ const App = () => {
           }));
         }
         if (parsedData.subjects && currentUserRole !== 'ครูฝึกในสถานประกอบการ') {
-          setSubjects(parsedData.subjects.map(s => ({ ...s, previewUrl: null, uploadedFile: null })));
+          const normalizedSubjects = [
+            ...parsedData.subjects.map((s, i) => ({
+              ...s,
+              id: s.id || getSubjectId(i),
+              mainTasks: Array.isArray(s.mainTasks) ? s.mainTasks : [],
+              isAnalyzed: Boolean(s.isAnalyzed || s.name || s.description || (s.mainTasks || []).length),
+              previewUrl: null,
+              uploadedFile: null
+            })),
+            ...createEmptySubjects().slice(parsedData.subjects.length)
+          ].slice(0, 30);
+
+          setSubjects(normalizedSubjects);
         }
         if (parsedData.selectedBehaviors) setSelectedBehaviors(parsedData.selectedBehaviors);
       }
