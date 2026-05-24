@@ -509,8 +509,10 @@ const App = () => {
     showStatus('กำลังบันทึกข้อมูลลงเครื่อง...');
     try {
       const safeConfig = { ...config, userApiKey: '', openaiApiKey: '', claudeApiKey: '', deepseekApiKey: '' };
-      const cleanedSubjects = subjects.map(s => { const { uploadedFile, previewUrl, ...rest } = s; return rest; });
-
+      const cleanedSubjects = subjects.map(s => {
+        const { uploadedFile, previewUrl, ...rest } = s;
+        return rest;
+      });
       const payload = JSON.stringify({ config: safeConfig, subjects: cleanedSubjects, workplaceMainTasks, selectedBehaviors });
       const encryptedData = encryptPayload(payload);
       const blob = new Blob([encryptedData], { type: 'application/octet-stream' });
@@ -586,7 +588,11 @@ const App = () => {
       const parsedData = typeof item.dataPayload === 'string'
         ? JSON.parse(item.dataPayload)
         : item.dataPayload || item;
-
+      if ((!parsedData.subjects || parsedData.subjects.length === 0) && item.subjectsPayload) {
+        parsedData.subjects = typeof item.subjectsPayload === 'string'
+          ? JSON.parse(item.subjectsPayload)
+          : item.subjectsPayload;
+      }
       const normalizedSubjects = Array.isArray(parsedData.subjects)
         ? parsedData.subjects.map((s, i) => ({
           id: s.id || getSubjectId(i),
@@ -984,7 +990,43 @@ const App = () => {
       const safeConfig = { ...config, userApiKey: '', openaiApiKey: '', claudeApiKey: '', deepseekApiKey: '' };
 
       // 🟢 ดึงข้อมูลรายวิชาที่วิเคราะห์แล้วไปด้วย (แต่ตัดรูปภาพอัปโหลดทิ้งไปเพื่อไม่ให้ไฟล์หนัก)
-      const cleanedSubjects = subjects.map(s => { const { uploadedFile, previewUrl, ...rest } = s; return rest; });
+      const cleanedSubjects = subjects
+        .filter(s =>
+          s.isAnalyzed ||
+          s.name?.trim() ||
+          s.description?.trim() ||
+          (Array.isArray(s.mainTasks) && s.mainTasks.length > 0)
+        )
+        .map((s, i) => ({
+          id: s.id || getSubjectId(i),
+          code: s.code || '',
+          name: s.name || '',
+          credits: s.credits || '',
+          standards: s.standards || '',
+          learningOutcomes: s.learningOutcomes || '',
+          objectives: s.objectives || '',
+          competencies: s.competencies || '',
+          description: s.description || '',
+          mainTasks: Array.isArray(s.mainTasks)
+            ? s.mainTasks.map(mt => ({
+              id: mt.id || '',
+              name: mt.name || '',
+              subTasks: Array.isArray(mt.subTasks)
+                ? mt.subTasks.map(st => ({
+                  id: st.id || '',
+                  name: st.name || ''
+                }))
+                : []
+            }))
+            : [],
+          isAnalyzed: true,
+          previewUrl: null,
+          uploadedFile: null
+        }));
+
+      if (cleanedSubjects.length === 0) {
+        return showStatus("ยังไม่มีข้อมูลวิเคราะห์รายวิชา กรุณาวิเคราะห์รายวิชาก่อนแชร์เข้าคลังอาชีวศึกษา");
+      }
 
       const payload = {
         college: config.collegeName,
@@ -992,6 +1034,10 @@ const App = () => {
         province: config.province,
         major: config.major || config.fieldOfStudy,
         creator: config.trainerName,
+
+        // สำรองข้อมูลรายวิชาแยกไว้อีกช่อง กันกรณี dataPayload ถูกอ่านไม่ครบ
+        subjectsPayload: JSON.stringify(cleanedSubjects),
+
         dataPayload: JSON.stringify({
           config: safeConfig,
           workplaceMainTasks,
