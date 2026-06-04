@@ -1728,21 +1728,32 @@ ${pool.length > 0 ? `2. **สำคัญมาก (การจับคู่�
       const safeSubTasks = Array.isArray(result.subTasks) ? result.subTasks : [];
       const newSubTasks = safeSubTasks.map((st, i) => {
         const safeSubTaskId = extractValidTaskIds(st.subjectTaskId);
+
+        const normalizedObjectiveRows = Array.isArray(st.objectiveRows)
+          ? st.objectiveRows
+            .filter(row => row?.objective && row?.domain)
+            .slice(0, 5)
+          : [];
+
         return {
-          ...st,
           id: safeSubTaskId || `W${tIdx}-${i + 1}`,
           subjectTaskId: safeSubTaskId,
           name: cleanTaskName(pool.find(p => p.id === safeSubTaskId)?.name || st.workplaceName),
           workplaceName: cleanTaskName(st.workplaceName),
           hours: st.hours || 10,
-          objectiveRows: Array.isArray(st.objectiveRows) ? st.objectiveRows : [],
+          isAnalyzing: false,
+
+          // แผนวิเคราะห์ใหม่ใช้จุดประสงค์ระดับ "งานย่อย"
+          objectiveRows: normalizedObjectiveRows,
+
+          // แผนวิเคราะห์ใหม่เก็บเฉพาะขั้นตอน ไม่เก็บ objectives/levels รายขั้น
           detailed_steps: Array.isArray(st.detailed_steps)
             ? st.detailed_steps.map(step => ({
-              ...step,
-              subjectTaskId: extractValidTaskIds(step.subjectTaskId)
+              subjectTaskId: extractValidTaskIds(step.subjectTaskId),
+              step_text: step.step_text || step.stepText || step.name || "",
+              equipment: step.equipment || ""
             }))
-            : [],
-          isAnalyzing: false
+            : []
         };
       });
 
@@ -3492,25 +3503,38 @@ ${pool.length > 0 ? `**สำคัญมาก (การจับคู่ร�
                           <tbody>
                             <tbody>
                               {(() => {
-                                const isNewFo2Format = Array.isArray(task.objectiveRows) && task.objectiveRows.length > 0;
+                                const steps = Array.isArray(task.detailed_steps)
+                                  ? task.detailed_steps
+                                  : Array.isArray(task.detailedSteps)
+                                    ? task.detailedSteps
+                                    : Array.isArray(task.steps)
+                                      ? task.steps
+                                      : [];
+
+                                const objectiveRows = Array.isArray(task.objectiveRows)
+                                  ? task.objectiveRows.filter(row => row?.objective && row?.domain)
+                                  : [];
+
+                                const hasNewObjectiveRows = objectiveRows.length > 0;
+
+                                const isNewFo2Format = hasNewObjectiveRows;
 
                                 if (isNewFo2Format) {
-                                  return task.objectiveRows.map((row, si) => (
+                                  return objectiveRows.map((row, si) => (
                                     <tr key={si} className="align-top leading-tight font-serif">
                                       <td className="border border-black p-1 text-center font-bold">{si + 1}</td>
 
                                       {si === 0 && (
                                         <td
                                           className="border border-black p-2 leading-relaxed"
-                                          rowSpan={task.objectiveRows.length}
+                                          rowSpan={objectiveRows.length}
                                         >
                                           <p className="font-bold mb-2">
                                             {cleanTaskName(task.workplaceName)}
                                           </p>
-
-                                          {(task.detailed_steps || []).map((step, stepIdx) => (
+                                          {steps.map((step, stepIdx) => (
                                             <p key={stepIdx} className="mb-1">
-                                              {stepIdx + 1}) {step.step_text}
+                                              {stepIdx + 1}) {step.step_text || step.stepText || step.name || "-"}
                                             </p>
                                           ))}
                                         </td>
@@ -3546,25 +3570,48 @@ ${pool.length > 0 ? `**สำคัญมาก (การจับคู่ร�
                                   ));
                                 }
 
-                                return (task.detailed_steps || []).map((step, si) => (
-                                  <tr key={si} className="align-top leading-tight font-serif">
-                                    <td className="border border-black p-1 text-center font-bold">{si + 1}</td>
-                                    <td className="border border-black p-1 font-bold leading-relaxed">{step.step_text}</td>
-                                    <td className="border border-black p-1 space-y-1 text-[8pt] font-serif">
-                                      <p><b>K:</b> {step.objectives?.k || "-"}</p>
-                                      <p><b>S:</b> {step.objectives?.s || "-"}</p>
-                                      <p><b>A:</b> {step.objectives?.a || "-"}</p>
-                                      <p><b>Ap:</b> {step.objectives?.ap || "-"}</p>
-                                    </td>
-                                    <td className="border border-black p-1 text-center font-bold text-blue-900">K{step.levels?.k || 1}</td>
-                                    <td className="border border-black p-1 text-center font-bold text-green-900">S{step.levels?.s || 1}</td>
-                                    <td className="border border-black p-1 text-center font-bold text-amber-900">A{step.levels?.a || 1}</td>
-                                    <td className="border border-black p-1 text-center font-bold text-purple-900">Ap{step.levels?.ap || 1}</td>
-                                    <td className="border border-black p-1 text-[8pt] text-center">สาธิต/ปฏิบัติ</td>
-                                    <td className="border border-black p-1 text-[8pt] text-left leading-relaxed">{step.equipment || "ของจริง / คู่มือ"}</td>
-                                    <td className="border border-black p-1 text-[8pt] text-center">สังเกตพฤติกรรม</td>
-                                  </tr>
-                                ));
+                                return steps.map((step, si) => {
+                                  const objectives = step.objectives || {};
+
+                                  const levels = step.levels || {
+                                    k: step.kLevel || step.levelK || 1,
+                                    s: step.sLevel || step.levelS || 1,
+                                    a: step.aLevel || step.levelA || 1,
+                                    ap: step.apLevel || step.levelAp || 1
+                                  };
+
+                                  return (
+                                    <tr key={si} className="align-top leading-tight font-serif">
+                                      <td className="border border-black p-1 text-center font-bold">{si + 1}</td>
+
+                                      <td className="border border-black p-1 font-bold leading-relaxed">
+                                        {step.step_text || step.stepText || step.name || "-"}
+                                      </td>
+
+                                      <td className="border border-black p-1 space-y-1 text-[8pt] font-serif">
+                                        <p><b>K:</b> {objectives.k || step.kObjective || "-"}</p>
+                                        <p><b>S:</b> {objectives.s || step.sObjective || "-"}</p>
+                                        <p><b>A:</b> {objectives.a || step.aObjective || "-"}</p>
+                                        <p><b>Ap:</b> {objectives.ap || step.apObjective || "-"}</p>
+                                      </td>
+
+                                      <td className="border border-black p-1 text-center font-bold text-blue-900">K{levels.k || 1}</td>
+                                      <td className="border border-black p-1 text-center font-bold text-green-900">S{levels.s || 1}</td>
+                                      <td className="border border-black p-1 text-center font-bold text-amber-900">A{levels.a || 1}</td>
+                                      <td className="border border-black p-1 text-center font-bold text-purple-900">Ap{levels.ap || 1}</td>
+
+                                      <td className="border border-black p-1 text-[8pt] text-center">
+                                        {step.teachingMethod || "สาธิต/ปฏิบัติ"}
+                                      </td>
+                                      <td className="border border-black p-1 text-[8pt] text-left leading-relaxed">
+                                        {step.equipment || step.tools || "ของจริง / คู่มือ"}
+                                      </td>
+                                      <td className="border border-black p-1 text-[8pt] text-center">
+                                        {step.evaluation || "สังเกตพฤติกรรม"}
+                                      </td>
+                                    </tr>
+                                  );
+                                });
                               })()}
                             </tbody>
                           </tbody>
