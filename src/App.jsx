@@ -135,6 +135,7 @@ const App = () => {
     objectives: '',
     competencies: '',
     description: '',
+    occupation: '',
     mainTasks: [],
     isAnalyzed: false,
     previewUrl: null,
@@ -622,6 +623,7 @@ const App = () => {
           objectives: s.objectives || '',
           competencies: s.competencies || '',
           description: s.description || '',
+          occupation: s.occupation || '',
           mainTasks: Array.isArray(s.mainTasks) ? s.mainTasks : [],
           isAnalyzed: Boolean(
             s.isAnalyzed ||
@@ -1025,6 +1027,7 @@ const App = () => {
           objectives: s.objectives || '',
           competencies: s.competencies || '',
           description: s.description || '',
+          occupation: s.occupation || '',
           mainTasks: Array.isArray(s.mainTasks)
             ? s.mainTasks.map(mt => ({
               id: mt.id || '',
@@ -1280,7 +1283,11 @@ const App = () => {
   const runSubjectAnalysis = async (sub) => {
     const systemPrompt = `คุณคือผู้เชี่ยวชาญวิเคราะห์รายวิชาอาชีวศึกษา วิเคราะห์วิชา: "${sub.id}"
     หน้าที่ของคุณ:
-    1. สกัดข้อมูลพื้นฐาน: รหัสวิชา, ชื่อวิชา (สำคัญ: หากมีทั้งชื่อภาษาไทยและภาษาอังกฤษ ให้สกัดมาให้ครบถ้วนทั้งสองภาษาห้ามตัดทิ้ง), ท-ป-น (credits), อ้างอิงมาตรฐาน (standards), ผลลัพธ์การเรียนรู้ระดับรายวิชา (learningOutcomes), จุดประสงค์รายวิชา (objectives), สมรรถนะรายวิชา (competencies), และ คำอธิบายรายวิชา (description)
+    1. สกัดข้อมูลพื้นฐาน: รหัสวิชา, ชื่อวิชา (สำคัญ: หากมีทั้งชื่อภาษาไทยและภาษาอังกฤษ ให้สกัดมาให้ครบถ้วนทั้งสองภาษาห้ามตัดทิ้ง), ท-ป-น (credits), อ้างอิงมาตรฐาน (standards), ผลลัพธ์การเรียนรู้ระดับรายวิชา (learningOutcomes), จุดประสงค์รายวิชา (objectives), สมรรถนะรายวิชา (competencies), คำอธิบายรายวิชา (description), และอาชีพ/ตำแหน่งงานของรายวิชา (occupation)
+    ข้อกำหนดสำคัญ:
+    - competencies ต้องเรียงเป็นข้อ ๆ เช่น 1. ..., 2. ..., 3. ...
+    - ห้ามเขียนสมรรถนะรายวิชาติดกันเป็นย่อหน้ายาว
+    - occupation ต้องระบุเป็นชื่ออาชีพหรือตำแหน่งงานที่ผู้เรียนสามารถนำรายวิชานี้ไปปฏิบัติได้ เช่น ช่างเทคนิค, ผู้ช่วยช่างซ่อมบำรุง, พนักงานบริการอาหาร, ผู้ช่วยนักวิเคราะห์คุณภาพอาหาร
     2. **สำคัญมาก**: ต้องวิเคราะห์สมรรถนะเพื่อสร้าง "งานหลัก" (mainTasks) และ "งานย่อย" (subTasks) อย่างน้อย 2-3 งาน
     3. รหัสงานต้องขึ้นต้นด้วย "${sub.id}" เสมอ (งานหลักให้ใช้รหัสเช่น ${sub.id}1, ${sub.id}2 และงานย่อยให้ใช้รหัสเช่น ${sub.id}1-1, ${sub.id}1-2)
     4. ห้ามใช้คำว่า ศึกษา, เรียนรู้, ทฤษฎี, อธิบาย, บอก, ระบุ, เข้าใจ, ทราบ ในการกำหนดชื่องานหลักและงานย่อยโดยเด็ดขาด
@@ -1306,7 +1313,9 @@ const App = () => {
             properties: {
               code: { type: "STRING" }, name: { type: "STRING" }, credits: { type: "STRING" },
               standards: { type: "STRING" }, learningOutcomes: { type: "STRING" }, objectives: { type: "STRING" },
-              competencies: { type: "STRING" }, description: { type: "STRING" }
+              competencies: { type: "STRING" },
+              description: { type: "STRING" },
+              occupation: { type: "STRING" }
             }
           },
           mainTasks: {
@@ -1347,7 +1356,7 @@ const App = () => {
           code: result.courseInfo?.code || sub.code || '', name: result.courseInfo?.name || sub.name || '', credits: result.courseInfo?.credits || sub.credits || '',
           standards: result.courseInfo?.standards || sub.standards || '', learningOutcomes: result.courseInfo?.learningOutcomes || sub.learningOutcomes || '',
           objectives: result.courseInfo?.objectives || sub.objectives || '', competencies: result.courseInfo?.competencies || sub.competencies || '',
-          description: result.courseInfo?.description || sub.description || '', mainTasks: (result.mainTasks && result.mainTasks.length > 0) ? result.mainTasks : sub.mainTasks,
+          description: result.courseInfo?.description || sub.description || '', occupation: result.courseInfo?.occupation || sub.occupation || '', mainTasks: (result.mainTasks && result.mainTasks.length > 0) ? result.mainTasks : sub.mainTasks,
           isAnalyzed: true
         };
         return n;
@@ -1378,7 +1387,12 @@ const App = () => {
         const result = await runSubjectAnalysis(latestSub);
         setSubjects(prev => {
           const n = [...prev];
-          n[idx] = { ...n[idx], code: result.courseInfo?.code || n[idx].code || '', name: result.courseInfo?.name || n[idx].name || '', credits: result.courseInfo?.credits || n[idx].credits || '', standards: result.courseInfo?.standards || n[idx].standards || '', learningOutcomes: result.courseInfo?.learningOutcomes || n[idx].learningOutcomes || '', objectives: result.courseInfo?.objectives || n[idx].objectives || '', competencies: result.courseInfo?.competencies || n[idx].competencies || '', description: result.courseInfo?.description || n[idx].description || '', mainTasks: (result.mainTasks && result.mainTasks.length > 0) ? result.mainTasks : n[idx].mainTasks, isAnalyzed: true };
+          n[idx] = {
+            ...n[idx], code: result.courseInfo?.code || n[idx].code || '', name: result.courseInfo?.name || n[idx].name || '', credits: result.courseInfo?.credits || n[idx].credits || '', standards: result.courseInfo?.standards || n[idx].standards || '', learningOutcomes: result.courseInfo?.learningOutcomes || n[idx].learningOutcomes || '', objectives: result.courseInfo?.objectives || n[idx].objectives || '', competencies: result.courseInfo?.competencies || n[idx].competencies || '', description: result.courseInfo?.description || n[idx].description || '',
+            occupation: result.courseInfo?.occupation || n[idx].occupation || '',
+            mainTasks: (result.mainTasks && result.mainTasks.length > 0) ? result.mainTasks : n[idx].mainTasks,
+            isAnalyzed: true
+          };
           return n;
         });
         showStatus(`วิเคราะห์วิชา ${latestSub.id} สำเร็จ`);
@@ -1460,7 +1474,10 @@ const App = () => {
     currentSubjects.push({
       id: getSubjectId(currentSubjects.length),
       code: '', name: '', credits: '', standards: '', learningOutcomes: '',
-      objectives: '', competencies: '', description: '', mainTasks: [],
+      objectives: '', competencies: '',
+      description: '',
+      occupation: '',
+      mainTasks: [],
       isAnalyzed: false, previewUrl: null, uploadedFile: null
     });
 
@@ -3273,7 +3290,7 @@ Ap3 วางแผนการแก้ปัญหาหรือพัฒน�
                 </div>
               </div>
 
-              <div id="dve-all-area" className="font-serif">
+              <div id="dve-all-area" className="Section2 font-serif">
 
                 {/* DVE-04-02 */}
                 <div id="dve-0402-area" className={`Section2 ${activeReportView !== 'dve0402' ? 'hidden' : ''}`}>
@@ -3330,9 +3347,13 @@ Ap3 วางแผนการแก้ปัญหาหรือพัฒน�
                                   {mtIdx === 0 && stIdx === 0 && (
                                     <>
                                       <td rowSpan={totalSubTasks} className="border border-black p-2 text-center align-top">{sub.credits || '-'}</td>
-                                      <td rowSpan={totalSubTasks} className="border border-black p-2 align-top whitespace-pre-line leading-relaxed">{sub.competencies || '-'}</td>
+                                      <td rowSpan={totalSubTasks} className="border border-black p-2 align-top leading-relaxed">
+                                        {formatNumberedText(sub.competencies)}
+                                      </td>
                                       <td rowSpan={totalSubTasks} className="border border-black p-2 align-top whitespace-pre-line leading-relaxed">{sub.isAnalyzed ? (sub.description && sub.description !== sub.competencies ? sub.description : '-') : (sub.description || '-')}</td>
-                                      <td rowSpan={totalSubTasks} className="border border-black p-2 align-top">{sub.id} {config.occupation || 'ช่างเทคนิค'}</td>
+                                      <td rowSpan={totalSubTasks} className="border border-black p-2 align-top">
+                                        {sub.id} {sub.occupation || config.occupation || 'ช่างเทคนิค'}
+                                      </td>
                                     </>
                                   )}
                                   {stIdx === 0 && (
@@ -3532,7 +3553,7 @@ Ap3 วางแผนการแก้ปัญหาหรือพัฒน�
                 </div>
 
                 {/* ฝอ.1 */}
-                <div id="dve-0405-area" className={activeReportView !== 'dve0405' ? 'hidden' : ''}>
+                <div id="dve-0405-area" className={`Section2 ${activeReportView !== 'dve0405' ? 'hidden' : ''}`}>
                   <div className="page-break mb-20 font-serif border-t-2 pt-10 border-dashed border-slate-300">
                     <div className="text-right text-[10pt] mb-2 border p-1 w-fit ml-auto italic font-serif">DVE-04-05 (ฝอ.1)</div>
                     <div className="report-header font-serif text-[11pt] space-y-1.5">
@@ -3639,7 +3660,7 @@ Ap3 วางแผนการแก้ปัญหาหรือพัฒน�
                 </div>
 
                 {/* ฝอ.2 */}
-                <div id="dve-0406-area" className={activeReportView !== 'dve0406' ? 'hidden' : ''}>
+                <div id="dve-0406-area" className={`Section2 ${activeReportView !== 'dve0406' ? 'hidden' : ''}`}>
                   <div className="page-break font-serif">
                     {workplaceTasksFlat.map((task, idx) => (
                       <div key={idx} className="mb-20 border-2 border-black p-6 font-serif">
