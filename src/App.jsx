@@ -3491,25 +3491,81 @@ ${pool.length > 0 ? `**สำคัญมาก (การจับคู่ร�
                           </thead>
                           <tbody>
                             <tbody>
-                              {(task.detailed_steps || []).map((step, si) => (
-                                <tr key={si} className="align-top leading-tight font-serif">
-                                  <td className="border border-black p-1 text-center font-bold">{si + 1}</td>
-                                  <td className="border border-black p-1 font-bold leading-relaxed">{step.step_text}</td>
-                                  <td className="border border-black p-1 space-y-1 text-[8pt] font-serif">
-                                    <p><b>K:</b> {step.objectives?.k || '-'}</p>
-                                    <p><b>S:</b> {step.objectives?.s || '-'}</p>
-                                    <p><b>A:</b> {step.objectives?.a || '-'}</p>
-                                    <p><b>Ap:</b> {step.objectives?.ap || '-'}</p>
-                                  </td>
-                                  <td className="border border-black p-1 text-center font-bold text-blue-900">K{step.levels?.k || 1}</td>
-                                  <td className="border border-black p-1 text-center font-bold text-green-900">S{step.levels?.s || 1}</td>
-                                  <td className="border border-black p-1 text-center font-bold text-amber-900">A{step.levels?.a || 1}</td>
-                                  <td className="border border-black p-1 text-center font-bold text-purple-900">Ap{step.levels?.ap || 1}</td>
-                                  <td className="border border-black p-1 text-[8pt] text-center">สาธิต/ปฏิบัติ</td>
-                                  <td className="border border-black p-1 text-[8pt] text-left leading-relaxed">{step.equipment || 'ของจริง / คู่มือ'}</td>
-                                  <td className="border border-black p-1 text-[8pt] text-center">สังเกตพฤติกรรม</td>
-                                </tr>
-                              ))}
+                              {(() => {
+                                const isNewFo2Format = Array.isArray(task.objectiveRows) && task.objectiveRows.length > 0;
+
+                                if (isNewFo2Format) {
+                                  return task.objectiveRows.map((row, si) => (
+                                    <tr key={si} className="align-top leading-tight font-serif">
+                                      <td className="border border-black p-1 text-center font-bold">{si + 1}</td>
+
+                                      {si === 0 && (
+                                        <td
+                                          className="border border-black p-2 leading-relaxed"
+                                          rowSpan={task.objectiveRows.length}
+                                        >
+                                          <p className="font-bold mb-2">
+                                            {cleanTaskName(task.workplaceName)}
+                                          </p>
+
+                                          {(task.detailed_steps || []).map((step, stepIdx) => (
+                                            <p key={stepIdx} className="mb-1">
+                                              {stepIdx + 1}) {step.step_text}
+                                            </p>
+                                          ))}
+                                        </td>
+                                      )}
+
+                                      <td className="border border-black p-2 text-[8pt] leading-relaxed">
+                                        {row.objective || "-"}
+                                      </td>
+
+                                      <td className="border border-black p-1 text-center font-bold text-blue-900">
+                                        {row.domain === "K" ? `K${row.level || 1}` : ""}
+                                      </td>
+                                      <td className="border border-black p-1 text-center font-bold text-green-900">
+                                        {row.domain === "S" ? `S${row.level || 1}` : ""}
+                                      </td>
+                                      <td className="border border-black p-1 text-center font-bold text-amber-900">
+                                        {row.domain === "A" ? `A${row.level || 1}` : ""}
+                                      </td>
+                                      <td className="border border-black p-1 text-center font-bold text-purple-900">
+                                        {row.domain === "Ap" ? `Ap${row.level || 1}` : ""}
+                                      </td>
+
+                                      <td className="border border-black p-1 text-[8pt] text-center">
+                                        {row.teachingMethod || "สาธิต/ฝึกปฏิบัติ"}
+                                      </td>
+                                      <td className="border border-black p-1 text-[8pt] text-left leading-relaxed">
+                                        {row.equipment || "ของจริง / คู่มือ"}
+                                      </td>
+                                      <td className="border border-black p-1 text-[8pt] text-center">
+                                        {row.evaluation || "สังเกตพฤติกรรม"}
+                                      </td>
+                                    </tr>
+                                  ));
+                                }
+
+                                return (task.detailed_steps || []).map((step, si) => (
+                                  <tr key={si} className="align-top leading-tight font-serif">
+                                    <td className="border border-black p-1 text-center font-bold">{si + 1}</td>
+                                    <td className="border border-black p-1 font-bold leading-relaxed">{step.step_text}</td>
+                                    <td className="border border-black p-1 space-y-1 text-[8pt] font-serif">
+                                      <p><b>K:</b> {step.objectives?.k || "-"}</p>
+                                      <p><b>S:</b> {step.objectives?.s || "-"}</p>
+                                      <p><b>A:</b> {step.objectives?.a || "-"}</p>
+                                      <p><b>Ap:</b> {step.objectives?.ap || "-"}</p>
+                                    </td>
+                                    <td className="border border-black p-1 text-center font-bold text-blue-900">K{step.levels?.k || 1}</td>
+                                    <td className="border border-black p-1 text-center font-bold text-green-900">S{step.levels?.s || 1}</td>
+                                    <td className="border border-black p-1 text-center font-bold text-amber-900">A{step.levels?.a || 1}</td>
+                                    <td className="border border-black p-1 text-center font-bold text-purple-900">Ap{step.levels?.ap || 1}</td>
+                                    <td className="border border-black p-1 text-[8pt] text-center">สาธิต/ปฏิบัติ</td>
+                                    <td className="border border-black p-1 text-[8pt] text-left leading-relaxed">{step.equipment || "ของจริง / คู่มือ"}</td>
+                                    <td className="border border-black p-1 text-[8pt] text-center">สังเกตพฤติกรรม</td>
+                                  </tr>
+                                ));
+                              })()}
                             </tbody>
                           </tbody>
                         </table>
