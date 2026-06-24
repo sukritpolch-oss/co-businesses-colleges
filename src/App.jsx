@@ -704,6 +704,7 @@ const App = () => {
   const [sharingSubjectId, setSharingSubjectId] = useState(null);
   const [deletingCourseId, setDeletingCourseId] = useState(null);
   const [courseLibrarySearch, setCourseLibrarySearch] = useState('');
+  const [selectedCourseLibraryIds, setSelectedCourseLibraryIds] = useState([]);
   // --- Work data states ---
   const [activeEvalView, setActiveEvalView] = useState('eval_workplace');
   const [activeReportView, setActiveReportView] = useState('dve0405');
@@ -1898,7 +1899,43 @@ const App = () => {
     setActiveTab('subjects');
     showStatus(`นำเข้าวิชา ${importedSubject.code} สำเร็จ`);
   };
+  const toggleCourseLibrarySelection = (itemId) => {
+    setSelectedCourseLibraryIds(prev =>
+      prev.includes(itemId)
+        ? prev.filter(id => id !== itemId)
+        : [...prev, itemId]
+    );
+  };
 
+  const importSelectedSharedCourses = () => {
+    const selectedItems = courseLibraryData.filter(item =>
+      selectedCourseLibraryIds.includes(item.id)
+    );
+
+    if (selectedItems.length === 0) {
+      return showStatus('กรุณาเลือกรายวิชาที่ต้องการนำเข้า');
+    }
+
+    const importedSubjects = selectedItems
+      .filter(item => item?.subject)
+      .map(item => normalizeSharedSubject(item.subject));
+
+    if (importedSubjects.length === 0) {
+      return showStatus('ไม่พบข้อมูลรายวิชาที่นำเข้าได้');
+    }
+
+    executeApplyDveData(
+      {
+        subjects: importedSubjects,
+        workplaceMainTasks: []
+      },
+      'append'
+    );
+
+    setSelectedCourseLibraryIds([]);
+    setActiveTab('subjects');
+    showStatus(`นำเข้ารายวิชา ${importedSubjects.length} วิชาเรียบร้อยแล้ว`);
+  };
   const deleteSharedCourse = async (item) => {
     const admin =
       isDeveloper ||
@@ -5822,15 +5859,29 @@ Ap3 วางแผนการแก้ปัญหาหรือพัฒน�
                       {PROVINCES.map(p => <option key={`filter-${p}`} value={p}>{p}</option>)}
                     </select>
                   </div>
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
-                    <input
-                      type="text"
-                      placeholder="ค้นหาสถานประกอบการ..."
-                      className="w-full sm:w-64 pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-700 outline-none focus:ring-2 focus:ring-indigo-500"
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                    />
+                  <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+                    <div className="relative">
+                      <Search
+                        size={16}
+                        className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+                      />
+                      <input
+                        value={courseLibrarySearch}
+                        onChange={event => setCourseLibrarySearch(event.target.value)}
+                        placeholder="ค้นหารหัสหรือชื่อวิชา..."
+                        className="w-full md:w-72 pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500"
+                      />
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={importSelectedSharedCourses}
+                      disabled={selectedCourseLibraryIds.length === 0}
+                      className="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-3 rounded-xl text-xs font-black flex items-center justify-center gap-2 disabled:bg-slate-300 disabled:cursor-not-allowed"
+                    >
+                      <DownloadCloud size={16} />
+                      นำเข้าที่เลือก ({selectedCourseLibraryIds.length})
+                    </button>
                   </div>
                 </div>
               </div>
@@ -6026,13 +6077,23 @@ Ap3 วางแผนการแก้ปัญหาหรือพัฒน�
                                 className="bg-slate-50 border border-slate-200 rounded-2xl p-5 flex flex-col"
                               >
                                 <div className="flex justify-between gap-3">
-                                  <div>
-                                    <p className="text-xs font-bold text-indigo-600">
-                                      {subject.code || 'ไม่ระบุรหัส'}
-                                    </p>
-                                    <h4 className="font-black text-slate-800">
-                                      {subject.name || 'ไม่ระบุชื่อวิชา'}
-                                    </h4>
+                                  <div className="flex items-start gap-3">
+                                    <input
+                                      type="checkbox"
+                                      checked={selectedCourseLibraryIds.includes(item.id)}
+                                      onChange={() => toggleCourseLibrarySelection(item.id)}
+                                      className="mt-1 w-5 h-5 accent-indigo-600 cursor-pointer"
+                                      title="เลือกรายวิชานี้"
+                                    />
+
+                                    <div>
+                                      <p className="text-xs font-bold text-indigo-600">
+                                        {subject.code || 'ไม่ระบุรหัส'}
+                                      </p>
+                                      <h4 className="font-black text-slate-800">
+                                        {subject.name || 'ไม่ระบุชื่อวิชา'}
+                                      </h4>
+                                    </div>
                                   </div>
 
                                   {canDelete && (
