@@ -1938,6 +1938,8 @@ const App = () => {
       return showStatus('ไม่พบข้อมูลรายวิชาที่นำเข้าได้');
     }
 
+    let importedCount = 0;
+
     setSubjects(prevSubjects => {
       const nextSubjects = [...prevSubjects];
 
@@ -1949,12 +1951,11 @@ const App = () => {
           !subject.uploadedFile
         );
 
-        if (emptyIndex === -1) return;
-
-        const newId = nextSubjects[emptyIndex].id;
+        const targetIndex = emptyIndex === -1 ? nextSubjects.length : emptyIndex;
+        const newId = nextSubjects[targetIndex]?.id || getSubjectId(targetIndex);
         const oldId = importedSubject.id || newId;
 
-        nextSubjects[emptyIndex] = {
+        nextSubjects[targetIndex] = {
           ...importedSubject,
           id: newId,
           isAnalyzed: true,
@@ -1973,12 +1974,12 @@ const App = () => {
             }))
             : []
         };
+
+        importedCount += 1;
       });
 
       return nextSubjects;
     });
-
-    const importedCount = importedSubjects.length;
 
     setPendingCourseImportItems([]);
     setSelectedCourseLibraryIds([]);
