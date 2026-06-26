@@ -913,6 +913,9 @@ const App = () => {
     ) {
       return setLoginError('กรุณาระบุชื่อสถานประกอบการ');
     }
+    if (!authData.department?.trim()) {
+      return setLoginError('กรุณาระบุแผนกวิชา');
+    }
     if (authData.hasTrained === null || authData.hasTrained === undefined) return setLoginError('กรุณาตอบคำถามว่าท่านผ่านการอบรมแล้วหรือไม่');
 
     const userExists = dbUsers.find(u => String(u.email || '').trim().toLowerCase() === String(authData.email).trim().toLowerCase());
