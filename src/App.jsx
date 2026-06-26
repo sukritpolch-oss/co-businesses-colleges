@@ -854,10 +854,10 @@ const App = () => {
           const statsData = await resStats.json();
 
           todayActiveUsers =
-            statsData.todayUsers ||
-            statsData.todayActiveUsers ||
-            statsData.uniqueTodayUsers ||
-            statsData.todayVisits ||
+            Number(statsData.todayActiveUsers) ||
+            Number(statsData.todayUsers) ||
+            Number(statsData.uniqueTodayUsers) ||
+            Number(statsData.todayVisits) ||
             0;
         }
 
@@ -877,7 +877,15 @@ const App = () => {
     }
   };
 
-  useEffect(() => { fetchDatabaseData(); }, []);
+  useEffect(() => {
+    fetchDatabaseData();
+
+    const statsTimer = setInterval(() => {
+      fetchDatabaseData();
+    }, 15000);
+
+    return () => clearInterval(statsTimer);
+  }, []);
 
   const handleAuthChange = (field, value) => {
     setAuthData(prev => ({ ...prev, [field]: value }));
