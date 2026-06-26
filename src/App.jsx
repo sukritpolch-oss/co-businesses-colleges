@@ -842,13 +842,31 @@ const App = () => {
       const resUsers = await fetch(`${GOOGLE_SCRIPT_URL}?action=getUsers&nocache=${Date.now()}`);
       if (resUsers.ok) {
         const data = await resUsers.json();
-        if (data.users) setDbUsers(data.users);
+        const users = Array.isArray(data.users) ? data.users : [];
+
+        setDbUsers(users);
+
         const resStats = await fetch(`${GOOGLE_SCRIPT_URL}?action=getStats&nocache=${Date.now()}`);
+
+        let todayActiveUsers = 0;
+
         if (resStats.ok) {
           const statsData = await resStats.json();
-          setStats({ total: statsData.totalVisits || 0, today: statsData.todayVisits || 0 });
+
+          todayActiveUsers =
+            statsData.todayUsers ||
+            statsData.todayActiveUsers ||
+            statsData.uniqueTodayUsers ||
+            statsData.todayVisits ||
+            0;
         }
-      } else {
+
+        setStats({
+          total: users.length,
+          today: todayActiveUsers
+        });
+      }
+      else {
         setLoginError("เชื่อมต่อฐานข้อมูลไม่สำเร็จ");
       }
     } catch (err) {
